@@ -1,0 +1,2 @@
+../Core/Src/MSTScheduler.c:81:12:vMSTPeriodicTaskCreate	104	static
+../Core/Src/MSTScheduler.c:130:17:prvMSTPeriodicGenericJob	40	static,ignoring_inline_asm
