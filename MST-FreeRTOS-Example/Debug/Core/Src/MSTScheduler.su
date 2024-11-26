@@ -1,0 +1,11 @@
+../Core/Src/MSTScheduler.c:14:6:tstMSTGiveTimerReference	16	static
+../Core/Src/MSTScheduler.c:18:14:prvMSTSetupUSClock	16	static
+../Core/Src/MSTScheduler.c:31:17:prvMSTGetUS	32	static
+../Core/Src/MSTScheduler.c:130:14:vMSTPeriodicTaskCreate	144	static,ignoring_inline_asm
+../Core/Src/MSTScheduler.c:189:13:prvMSTPeriodicGenericJob	40	static,ignoring_inline_asm
+../Core/Src/MSTScheduler.c:296:13:prvMSTPeriodicTimerCallback	24	static
+../Core/Src/MSTScheduler.c:306:13:prvMSTSporadicTimerCallback	24	static
+../Core/Src/MSTScheduler.c:317:12:vMSTSporadicTaskCreate	136	static
+../Core/Src/MSTScheduler.c:359:13:prvMSTSporadicGenericJob	48	static,ignoring_inline_asm
+../Core/Src/MSTScheduler.c:418:12:vMSTSporadicTaskRun	24	static
+../Core/Src/MSTScheduler.c:437:6:vMSTSchedulerStart	8	static
