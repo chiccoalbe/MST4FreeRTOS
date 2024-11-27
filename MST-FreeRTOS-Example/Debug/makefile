@@ -64,8 +64,8 @@ all: main-build
 main-build: MST-FreeRTOS.elf secondary-outputs
 
 # Tool invocations
-MST-FreeRTOS.elf MST-FreeRTOS.map: $(OBJS) $(USER_OBJS) /Users/enricoalberti/Desktop/STM/MST-FreeRTOS/STM32F401RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "MST-FreeRTOS.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/enricoalberti/Desktop/STM/MST-FreeRTOS/STM32F401RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="MST-FreeRTOS.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+MST-FreeRTOS.elf MST-FreeRTOS.map: $(OBJS) $(USER_OBJS) /Users/enricoalberti/Desktop/FILES/Embedded/FreeRTOS/MST4FreeRTOS/MST-FreeRTOS-Example/STM32F401RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "MST-FreeRTOS.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/enricoalberti/Desktop/FILES/Embedded/FreeRTOS/MST4FreeRTOS/MST-FreeRTOS-Example/STM32F401RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="MST-FreeRTOS.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

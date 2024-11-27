@@ -9,19 +9,13 @@
 /*
  * Timer reference given from user and used by MST to count nanoseconds
  */
-static TIM_TypeDef *tstMSTTimerReferenceFromUser = NULL;
-
-void tstMSTGiveTimerReference(TIM_TypeDef *fromUser) {
-	tstMSTTimerReferenceFromUser = fromUser;
-}
-
 static float prvMSTSetupUSClock() {
 	//set prescaler equal to MHz of clock
-	__HAL_RCC_TIM2_CLK_ENABLE();
+	/*__HAL_RCC_TIM2_CLK_ENABLE();
 	tstMSTTimerReferenceFromUser->PSC = (HAL_RCC_GetPCLK1Freq() / 1000000 - 1);
 	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
 	tstMSTTimerReferenceFromUser->ARR = 0xFFFFFFFF;
-	tstMSTTimerReferenceFromUser->CR1 |= TIM_CR1_CEN;
+	tstMSTTimerReferenceFromUser->CR1 |= TIM_CR1_CEN;*/
 	//we have that f_step = 1Mhz and Tstep = 1us, this way we can count us
 	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
 	DWT->CYCCNT = 0;
@@ -44,8 +38,9 @@ static void prvMSTSporadicGenericJob(void *pvParameters);
 
 #if(mst_test_PERIODIC_METHOD == 2)
 static void prvMSTPeriodicTimerCallback(TimerHandle_t xTimer);
-static void prvMSTSporadicTimerCallback(TimerHandle_t xTimer);
 #endif
+
+static void prvMSTSporadicTimerCallback(TimerHandle_t xTimer);
 
 /*
  based on configNUM_THREAD_LOCAL_STORAGE_POINTERS > 0 
@@ -244,9 +239,7 @@ static void prvMSTPeriodicGenericJob(void *pvParameters) {
 				//calculate the gap between perfect and absolute gap in us and update the avg
 				xCurrExtTCB->xUsFromIdealRelease += prvMSTGetUS() - perfRelease;
 				if (xCurrExtTCB->xNumOfIterations > 0) {
-					xCurrExtTCB->xUsAverageReleaseGap =
-							(xCurrExtTCB->xUsFromIdealRelease)
-									/ (xCurrExtTCB->xNumOfIterations);
+					xCurrExtTCB->xUsAverageReleaseGap = (xCurrExtTCB->xUsFromIdealRelease) / (xCurrExtTCB->xNumOfIterations);
 				}
 			#if(mst_test_PERIODIC_METHOD == 1)
 							xCurrExtTCB->xNumOfIterations++;
@@ -258,8 +251,7 @@ static void prvMSTPeriodicGenericJob(void *pvParameters) {
 		xCurrExtTCB->xPrevStartTime = xTaskGetTickCount();
 		xCurrExtTCB->pvJobCode(pvParameters);
 		xCurrExtTCB->xPrevFinishTime = xTaskGetTickCount();
-		xCurrExtTCB->xPrevExecTime = xCurrExtTCB->xPrevFinishTime
-				- xCurrExtTCB->xPrevStartTime;
+		xCurrExtTCB->xPrevExecTime = xCurrExtTCB->xPrevFinishTime - xCurrExtTCB->xPrevStartTime;
 
 		if (xCurrExtTCB->xPrevExecTime > xCurrExtTCB->xTaskDeadline) {
 			//current task got over the deadline, make notice of the event
@@ -336,7 +328,6 @@ BaseType_t vMSTSporadicTaskCreate(TaskFunction_t pvJobCode, const char *pcName,
 						.xJobCalled = pdFALSE, .xInterarrivalTimerRunning =
 								pdFALSE };
 
-		//TODO: implement with delays ( == 1)
 		/*
 		 We create the task and allocate, but we do not clear the mutex nor start the timer
 		 */
@@ -362,12 +353,7 @@ static void prvMSTSporadicGenericJob(void *pvParameters) {
 	extTCB_t *xCurrExtTCB = (extTCB_t*) pvTaskGetThreadLocalStoragePointer(
 			xCurrentHandle, mstLOCAL_STORAGE_DATA_INDEX);
 	configASSERT(xCurrExtTCB != NULL);
-
 	for (;;) {
-		#if(mst_test_PERIODIC_METHOD == 1)
-            //TODO: implement
-            return;
-        #elif(mst_test_PERIODIC_METHOD == 2)
 		/*
 		 Takes notification for current task, could be from timer or user
 		 */
@@ -403,7 +389,7 @@ static void prvMSTSporadicGenericJob(void *pvParameters) {
 		xCurrExtTCB->xInterarrivalTimerRunning = pdTRUE;
 		xCurrExtTCB->xJobCalled = pdFALSE;
 		taskEXIT_CRITICAL();
-#endif
+
 		xCurrExtTCB->xPrevStartTime = xTaskGetTickCount();
 		xCurrExtTCB->pvJobCode(pvParameters);
 		/*
@@ -422,11 +408,12 @@ BaseType_t vMSTSporadicTaskRun(TaskHandle_t *pxTaskToRunHandle) {
 	 */
 	extTCB_t *xCurrExtTCB = (extTCB_t*) pvTaskGetThreadLocalStoragePointer(
 			*pxTaskToRunHandle, mstLOCAL_STORAGE_DATA_INDEX);
-	enum sporadicTaskNotifyGiver_e giver = userRequest;
-	xTaskNotify(*pxTaskToRunHandle, (uint32_t )giver, eSetValueWithOverwrite);
+	
 	if (xCurrExtTCB == NULL) {
 		return pdFAIL;
 	} else {
+		enum sporadicTaskNotifyGiver_e giver = userRequest;
+		xTaskNotify(*pxTaskToRunHandle, (uint32_t )giver, eSetValueWithOverwrite);
 		return pdPASS;
 	}
 }

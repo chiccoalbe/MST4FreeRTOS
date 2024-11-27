@@ -40,7 +40,6 @@
  * Timer reference given from user and used by MST to count nanoseconds
  */
 #include "stm32f4xx_hal.h" //shall be modified for specific board
-void tstMSTGiveTimerReference(TIM_TypeDef*);
 
 #endif
 
