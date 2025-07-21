@@ -182,7 +182,7 @@ standard names. */
 #define portGET_RUN_TIME_COUNTER_VALUE getRunTimeCounterValue
 
 
-#define configNUM_THREAD_LOCAL_STORAGE_POINTERS  3
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS  10
 /* USER CODE END 2 */
 
 /* USER CODE BEGIN Defines */

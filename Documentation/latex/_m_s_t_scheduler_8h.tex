@@ -1,0 +1,217 @@
+\doxysection{MSTScheduler.\+h File Reference}
+\hypertarget{_m_s_t_scheduler_8h}{}\label{_m_s_t_scheduler_8h}\index{MSTScheduler.h@{MSTScheduler.h}}
+
+
+Header file for the standard model adaptation library of Free\+RTOS.  
+
+
+{\ttfamily \#include "{}Free\+RTOS.\+h"{}}\newline
+{\ttfamily \#include "{}task.\+h"{}}\newline
+{\ttfamily \#include "{}list.\+h"{}}\newline
+{\ttfamily \#include "{}timers.\+h"{}}\newline
+{\ttfamily \#include "{}stm32f4xx\+\_\+hal.\+h"{}}\newline
+\doxysubsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{_m_s_t_scheduler_8h_ab3716d48b08f5c9e9bd532b1f52bb368}{mst\+\_\+test\+\_\+\+PERIODIC\+\_\+\+METHOD}}~2
+\begin{DoxyCompactList}\small\item\em Macro to select the technique for periodic task management. \end{DoxyCompactList}\item 
+\Hypertarget{_m_s_t_scheduler_8h_ab3e1bcde626694b3a15c5265e2632d1e}\label{_m_s_t_scheduler_8h_ab3e1bcde626694b3a15c5265e2632d1e} 
+\#define {\bfseries mst\+\_\+sched\+SCHEDULING\+\_\+\+DEFAULT}~1
+\begin{DoxyCompactList}\small\item\em Default scheduling policy from Free\+RTOS. \end{DoxyCompactList}\item 
+\Hypertarget{_m_s_t_scheduler_8h_ab1e4dfd847a2b77cff70f52a11d43b99}\label{_m_s_t_scheduler_8h_ab1e4dfd847a2b77cff70f52a11d43b99} 
+\#define {\bfseries mst\+\_\+sched\+SCHEDULING\+\_\+\+RMS}~2
+\begin{DoxyCompactList}\small\item\em Rate-\/\+Monotonic Scheduling (RMS) policy managed by MST scheduler. \end{DoxyCompactList}\item 
+\Hypertarget{_m_s_t_scheduler_8h_a054e872253a5d6dda7a0fa5e1bdbecf3}\label{_m_s_t_scheduler_8h_a054e872253a5d6dda7a0fa5e1bdbecf3} 
+\#define {\bfseries mst\+\_\+sched\+SCHEDULING\+\_\+\+EDF}~3
+\begin{DoxyCompactList}\small\item\em Earliest-\/\+Deadline-\/\+First (EDF) scheduling policy managed by MST scheduler. \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{_m_s_t_scheduler_8h_a6cefe977c72d7ed604361ef43e822a44}{mst\+\_\+sched\+SCHEDULING\+\_\+\+POLICY}}~\mbox{\hyperlink{_m_s_t_scheduler_8h_ab1e4dfd847a2b77cff70f52a11d43b99}{mst\+\_\+sched\+SCHEDULING\+\_\+\+RMS}}
+\begin{DoxyCompactList}\small\item\em Selected scheduling policy. \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{_m_s_t_scheduler_8h_a8d32b5f74e55dfd12c5aa3415e16d75e}{config\+NUM\+\_\+\+THREAD\+\_\+\+LOCAL\+\_\+\+STORAGE\+\_\+\+POINTERS}}~3
+\begin{DoxyCompactList}\small\item\em Number of thread-\/local storage pointers. \end{DoxyCompactList}\item 
+\Hypertarget{_m_s_t_scheduler_8h_ab1c45ea62248c332df47b9b858586ab3}\label{_m_s_t_scheduler_8h_ab1c45ea62248c332df47b9b858586ab3} 
+\#define {\bfseries TESTING\+\_\+\+STM32}~1
+\begin{DoxyCompactList}\small\item\em Macro indicating STM32 testing environment. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{_m_s_t_scheduler_8h_aa1da0320aadb954f0b613dde3b26d82a}{v\+MSTScheduler\+Init}} (void)
+\begin{DoxyCompactList}\small\item\em Includes the HAL library for STM32\+F4 boards. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{_m_s_t_scheduler_8h_a492648b07031a66c57fb4bdd663fcd1b}{v\+MSTScheduler\+Start}} (void)
+\begin{DoxyCompactList}\small\item\em Starts the MST Scheduler. \end{DoxyCompactList}\item 
+Task\+Handle\+\_\+t \mbox{\hyperlink{_m_s_t_scheduler_8h_a0cac2b331abbc97d11dcf768a5f1f677}{v\+MSTPeriodic\+Task\+Create}} (Task\+Function\+\_\+t pv\+Job\+Code, const char \texorpdfstring{$\ast$}{*}const pc\+Name, uint16\+\_\+t us\+Stack\+Depth, void \texorpdfstring{$\ast$}{*}pv\+Parameters, UBase\+Type\+\_\+t ux\+Priority, Task\+Handle\+\_\+t \texorpdfstring{$\ast$}{*}px\+Created\+Task, Tick\+Type\+\_\+t x\+Task\+Period, Tick\+Type\+\_\+t x\+Task\+Deadline, Tick\+Type\+\_\+t x\+Task\+Phase, Tick\+Type\+\_\+t x\+Task\+WCET)
+\begin{DoxyCompactList}\small\item\em Creates a periodic task. \end{DoxyCompactList}\item 
+Base\+Type\+\_\+t \mbox{\hyperlink{_m_s_t_scheduler_8h_a1a94a42f8ee5ff9b422af2fe09cac749}{v\+MSTSporadic\+Task\+Create}} (Task\+Function\+\_\+t pv\+Job\+Code, const char \texorpdfstring{$\ast$}{*}const pc\+Name, uint16\+\_\+t us\+Stack\+Depth, void \texorpdfstring{$\ast$}{*}pv\+Parameters, UBase\+Type\+\_\+t ux\+Priority, Task\+Handle\+\_\+t \texorpdfstring{$\ast$}{*}px\+Created\+Task, Tick\+Type\+\_\+t x\+Task\+Interarrival\+Time, Tick\+Type\+\_\+t x\+Task\+Deadline, Tick\+Type\+\_\+t x\+Task\+WCET)
+\begin{DoxyCompactList}\small\item\em Creates a sporadic task. \end{DoxyCompactList}\item 
+Base\+Type\+\_\+t \mbox{\hyperlink{_m_s_t_scheduler_8h_a17d15fad92b9b2a43d0d645d6d021e7a}{v\+MSTSporadic\+Task\+Run}} (Task\+Handle\+\_\+t \texorpdfstring{$\ast$}{*}px\+Task\+To\+Run\+Handle)
+\begin{DoxyCompactList}\small\item\em Runs a sporadic job if the interarrival time has passed. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Header file for the standard model adaptation library of Free\+RTOS. 
+
+\begin{DoxyAuthor}{Author}
+Enrico Alberti 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2024 
+\end{DoxyDate}
+This file contains definitions and function prototypes for the Model-\/\+Specific Task (MST) scheduler library, which extends Free\+RTOS to include additional scheduling policies and support for periodic and sporadic tasks. 
+
+\doxysubsection{Macro Definition Documentation}
+\Hypertarget{_m_s_t_scheduler_8h_a8d32b5f74e55dfd12c5aa3415e16d75e}\index{MSTScheduler.h@{MSTScheduler.h}!configNUM\_THREAD\_LOCAL\_STORAGE\_POINTERS@{configNUM\_THREAD\_LOCAL\_STORAGE\_POINTERS}}
+\index{configNUM\_THREAD\_LOCAL\_STORAGE\_POINTERS@{configNUM\_THREAD\_LOCAL\_STORAGE\_POINTERS}!MSTScheduler.h@{MSTScheduler.h}}
+\doxysubsubsection{\texorpdfstring{configNUM\_THREAD\_LOCAL\_STORAGE\_POINTERS}{configNUM\_THREAD\_LOCAL\_STORAGE\_POINTERS}}
+{\footnotesize\ttfamily \label{_m_s_t_scheduler_8h_a8d32b5f74e55dfd12c5aa3415e16d75e} 
+\#define config\+NUM\+\_\+\+THREAD\+\_\+\+LOCAL\+\_\+\+STORAGE\+\_\+\+POINTERS~3}
+
+
+
+Number of thread-\/local storage pointers. 
+
+Default is set to 3 if not defined elsewhere. \Hypertarget{_m_s_t_scheduler_8h_a6cefe977c72d7ed604361ef43e822a44}\index{MSTScheduler.h@{MSTScheduler.h}!mst\_schedSCHEDULING\_POLICY@{mst\_schedSCHEDULING\_POLICY}}
+\index{mst\_schedSCHEDULING\_POLICY@{mst\_schedSCHEDULING\_POLICY}!MSTScheduler.h@{MSTScheduler.h}}
+\doxysubsubsection{\texorpdfstring{mst\_schedSCHEDULING\_POLICY}{mst\_schedSCHEDULING\_POLICY}}
+{\footnotesize\ttfamily \label{_m_s_t_scheduler_8h_a6cefe977c72d7ed604361ef43e822a44} 
+\#define mst\+\_\+sched\+SCHEDULING\+\_\+\+POLICY~\mbox{\hyperlink{_m_s_t_scheduler_8h_ab1e4dfd847a2b77cff70f52a11d43b99}{mst\+\_\+sched\+SCHEDULING\+\_\+\+RMS}}}
+
+
+
+Selected scheduling policy. 
+
+Default is RMS scheduling policy. \Hypertarget{_m_s_t_scheduler_8h_ab3716d48b08f5c9e9bd532b1f52bb368}\index{MSTScheduler.h@{MSTScheduler.h}!mst\_test\_PERIODIC\_METHOD@{mst\_test\_PERIODIC\_METHOD}}
+\index{mst\_test\_PERIODIC\_METHOD@{mst\_test\_PERIODIC\_METHOD}!MSTScheduler.h@{MSTScheduler.h}}
+\doxysubsubsection{\texorpdfstring{mst\_test\_PERIODIC\_METHOD}{mst\_test\_PERIODIC\_METHOD}}
+{\footnotesize\ttfamily \label{_m_s_t_scheduler_8h_ab3716d48b08f5c9e9bd532b1f52bb368} 
+\#define mst\+\_\+test\+\_\+\+PERIODIC\+\_\+\+METHOD~2}
+
+
+
+Macro to select the technique for periodic task management. 
+
+Options\+:
+\begin{DoxyItemize}
+\item 1\+: Using Free\+RTOS delays.
+\item 2\+: Using software timers. 
+\end{DoxyItemize}
+
+\doxysubsection{Function Documentation}
+\Hypertarget{_m_s_t_scheduler_8h_a0cac2b331abbc97d11dcf768a5f1f677}\index{MSTScheduler.h@{MSTScheduler.h}!vMSTPeriodicTaskCreate@{vMSTPeriodicTaskCreate}}
+\index{vMSTPeriodicTaskCreate@{vMSTPeriodicTaskCreate}!MSTScheduler.h@{MSTScheduler.h}}
+\doxysubsubsection{\texorpdfstring{vMSTPeriodicTaskCreate()}{vMSTPeriodicTaskCreate()}}
+{\footnotesize\ttfamily \label{_m_s_t_scheduler_8h_a0cac2b331abbc97d11dcf768a5f1f677} 
+Task\+Handle\+\_\+t v\+MSTPeriodic\+Task\+Create (\begin{DoxyParamCaption}\item[{Task\+Function\+\_\+t}]{pv\+Job\+Code}{, }\item[{const char \texorpdfstring{$\ast$}{*}const}]{pc\+Name}{, }\item[{uint16\+\_\+t}]{us\+Stack\+Depth}{, }\item[{void \texorpdfstring{$\ast$}{*}}]{pv\+Parameters}{, }\item[{UBase\+Type\+\_\+t}]{ux\+Priority}{, }\item[{Task\+Handle\+\_\+t \texorpdfstring{$\ast$}{*}}]{px\+Created\+Task}{, }\item[{Tick\+Type\+\_\+t}]{x\+Task\+Period}{, }\item[{Tick\+Type\+\_\+t}]{x\+Task\+Deadline}{, }\item[{Tick\+Type\+\_\+t}]{x\+Task\+Phase}{, }\item[{Tick\+Type\+\_\+t}]{x\+Task\+WCET}{}\end{DoxyParamCaption})}
+
+
+
+Creates a periodic task. 
+
+Adds standard model parameters to handle periodic tasks in addition to the parameters used by Free\+RTOS.
+
+
+\begin{DoxyParams}{Parameters}
+{\em pv\+Job\+Code} & Pointer to the function that implements the job. \\
+\hline
+{\em pc\+Name} & Descriptive name for the job. \\
+\hline
+{\em us\+Stack\+Depth} & Length of the stack for this task, expressed in words. \\
+\hline
+{\em pv\+Parameters} & Parameters passed into the job. \\
+\hline
+{\em ux\+Priority} & Priority of the job (not used if MST-\/specific scheduling is used). \\
+\hline
+{\em px\+Created\+Task} & Pointer to the job handle. \\
+\hline
+{\em x\+Task\+Period} & Period of the task in milliseconds. \\
+\hline
+{\em x\+Task\+Deadline} & Relative deadline of the task in milliseconds. \\
+\hline
+{\em x\+Task\+Phase} & Phase of the task in milliseconds (shift from first release). \\
+\hline
+{\em x\+Task\+WCET} & Worst-\/case execution time of the task.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Handle to the created task. 
+\end{DoxyReturn}
+\Hypertarget{_m_s_t_scheduler_8h_aa1da0320aadb954f0b613dde3b26d82a}\index{MSTScheduler.h@{MSTScheduler.h}!vMSTSchedulerInit@{vMSTSchedulerInit}}
+\index{vMSTSchedulerInit@{vMSTSchedulerInit}!MSTScheduler.h@{MSTScheduler.h}}
+\doxysubsubsection{\texorpdfstring{vMSTSchedulerInit()}{vMSTSchedulerInit()}}
+{\footnotesize\ttfamily \label{_m_s_t_scheduler_8h_aa1da0320aadb954f0b613dde3b26d82a} 
+void v\+MSTScheduler\+Init (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+Includes the HAL library for STM32\+F4 boards. 
+
+Modify this include for specific STM32 board support.
+
+Initializes the MST Scheduler.
+
+This function sets up the MST scheduler, preparing it to manage tasks based on the selected scheduling policy. \Hypertarget{_m_s_t_scheduler_8h_a492648b07031a66c57fb4bdd663fcd1b}\index{MSTScheduler.h@{MSTScheduler.h}!vMSTSchedulerStart@{vMSTSchedulerStart}}
+\index{vMSTSchedulerStart@{vMSTSchedulerStart}!MSTScheduler.h@{MSTScheduler.h}}
+\doxysubsubsection{\texorpdfstring{vMSTSchedulerStart()}{vMSTSchedulerStart()}}
+{\footnotesize\ttfamily \label{_m_s_t_scheduler_8h_a492648b07031a66c57fb4bdd663fcd1b} 
+void v\+MSTScheduler\+Start (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+Starts the MST Scheduler. 
+
+This function begins the task scheduling process using the MST framework. \Hypertarget{_m_s_t_scheduler_8h_a1a94a42f8ee5ff9b422af2fe09cac749}\index{MSTScheduler.h@{MSTScheduler.h}!vMSTSporadicTaskCreate@{vMSTSporadicTaskCreate}}
+\index{vMSTSporadicTaskCreate@{vMSTSporadicTaskCreate}!MSTScheduler.h@{MSTScheduler.h}}
+\doxysubsubsection{\texorpdfstring{vMSTSporadicTaskCreate()}{vMSTSporadicTaskCreate()}}
+{\footnotesize\ttfamily \label{_m_s_t_scheduler_8h_a1a94a42f8ee5ff9b422af2fe09cac749} 
+Base\+Type\+\_\+t v\+MSTSporadic\+Task\+Create (\begin{DoxyParamCaption}\item[{Task\+Function\+\_\+t}]{pv\+Job\+Code}{, }\item[{const char \texorpdfstring{$\ast$}{*}const}]{pc\+Name}{, }\item[{uint16\+\_\+t}]{us\+Stack\+Depth}{, }\item[{void \texorpdfstring{$\ast$}{*}}]{pv\+Parameters}{, }\item[{UBase\+Type\+\_\+t}]{ux\+Priority}{, }\item[{Task\+Handle\+\_\+t \texorpdfstring{$\ast$}{*}}]{px\+Created\+Task}{, }\item[{Tick\+Type\+\_\+t}]{x\+Task\+Interarrival\+Time}{, }\item[{Tick\+Type\+\_\+t}]{x\+Task\+Deadline}{, }\item[{Tick\+Type\+\_\+t}]{x\+Task\+WCET}{}\end{DoxyParamCaption})}
+
+
+
+Creates a sporadic task. 
+
+Adds standard model parameters to handle sporadic tasks in addition to the parameters used by Free\+RTOS.
+
+
+\begin{DoxyParams}{Parameters}
+{\em pv\+Job\+Code} & Pointer to the function that implements the job. \\
+\hline
+{\em pc\+Name} & Descriptive name for the job. \\
+\hline
+{\em us\+Stack\+Depth} & Length of the stack for this task, expressed in words. \\
+\hline
+{\em pv\+Parameters} & Parameters passed into the job. \\
+\hline
+{\em ux\+Priority} & Priority of the job (not used if MST-\/specific scheduling is used). \\
+\hline
+{\em px\+Created\+Task} & Pointer to the job handle. \\
+\hline
+{\em x\+Task\+Interarrival\+Time} & Minimum spacing between releases in milliseconds. \\
+\hline
+{\em x\+Task\+Deadline} & Relative deadline of the task in milliseconds. \\
+\hline
+{\em x\+Task\+WCET} & Worst-\/case execution time of the task.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+pd\+PASS if the task was created successfully 
+
+pd\+FAIL otherwise 
+\end{DoxyReturn}
+\Hypertarget{_m_s_t_scheduler_8h_a17d15fad92b9b2a43d0d645d6d021e7a}\index{MSTScheduler.h@{MSTScheduler.h}!vMSTSporadicTaskRun@{vMSTSporadicTaskRun}}
+\index{vMSTSporadicTaskRun@{vMSTSporadicTaskRun}!MSTScheduler.h@{MSTScheduler.h}}
+\doxysubsubsection{\texorpdfstring{vMSTSporadicTaskRun()}{vMSTSporadicTaskRun()}}
+{\footnotesize\ttfamily \label{_m_s_t_scheduler_8h_a17d15fad92b9b2a43d0d645d6d021e7a} 
+Base\+Type\+\_\+t v\+MSTSporadic\+Task\+Run (\begin{DoxyParamCaption}\item[{Task\+Handle\+\_\+t \texorpdfstring{$\ast$}{*}}]{px\+Task\+To\+Run\+Handle}{}\end{DoxyParamCaption})}
+
+
+
+Runs a sporadic job if the interarrival time has passed. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em px\+Task\+To\+Run\+Handle} & Handle to the task to be run.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+pd\+FAIL if the task was never created. 
+
+pd\+PASS if the task ran successfully. 
+\end{DoxyReturn}

@@ -228,7 +228,30 @@ count overflows. */
  * task should be used in place of the parameter.  This macro simply checks to
  * see if the parameter is NULL and returns a pointer to the appropriate TCB.
  */
-#define prvGetTCBFromHandle( pxHandle ) ( ( ( pxHandle ) == NULL ) ? pxCurrentTCB : ( pxHandle ) )
+/*
+#define prvGetTCBFromHandle(pxHandle)                    \
+    (                                                    \
+        ((pxHandle) == NULL) ?                           \
+        ({                                               \
+            configASSERT((xSchedulerRunning) != pdFALSE);\
+            pxCurrentTCB;                                \
+        })                                               \
+        : (pxHandle)                                     \
+    )
+*/
+
+
+#define prvGetTCBFromHandle( pxHandle )    ( ( ( pxHandle ) == NULL ) ? pxCurrentTCB : ( pxHandle ) )
+
+/*
+(                      \
+    ( ( pxHandle ) == NULL ) ? (      
+		configASSERT( ( xSchedulerRunning ) != pdFALSE ) ?                          \
+        configASSERT( ( xSchedulerRunning ) != pdFALSE ),      \
+        pxCurrentTCB                                           \
+    ) :                                                        \
+    ( pxHandle )                                               \
+)*/
 
 /* The item value of the event list item is normally used to hold the priority
 of the task to which it belongs (coded to allow it to be held in reverse
@@ -3557,7 +3580,6 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 		if( xIndex < configNUM_THREAD_LOCAL_STORAGE_POINTERS )
 		{
 			pxTCB = prvGetTCBFromHandle( xTaskToSet );
-			configASSERT( pxTCB != NULL );
 			pxTCB->pvThreadLocalStoragePointers[ xIndex ] = pvValue;
 		}
 	}

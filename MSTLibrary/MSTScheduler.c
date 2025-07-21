@@ -4,38 +4,34 @@
  */
 
 #include "MSTScheduler.h"
+#include <stdlib.h>
+#include <search.h>
 
 #if(TESTING_STM32 == 1)
-/*
- * Timer reference given from user and used by MST to count nanoseconds
- */
-static TIM_TypeDef *tstMSTTimerReferenceFromUser = NULL;
+	/*
+	* Timer reference given from user and used by MST to count nanoseconds
+	*/
+	static float prvMSTSetupUSClock() {
+		//set prescaler equal to MHz of clock
+		/*__HAL_RCC_TIM2_CLK_ENABLE();
+		tstMSTTimerReferenceFromUser->PSC = (HAL_RCC_GetPCLK1Freq() / 1000000 - 1);
+		RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
+		tstMSTTimerReferenceFromUser->ARR = 0xFFFFFFFF;
+		tstMSTTimerReferenceFromUser->CR1 |= TIM_CR1_CEN;*/
+		//we have that f_step = 1Mhz and Tstep = 1us, this way we can count us
+		CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+		DWT->CYCCNT = 0;
+		DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+	}
 
-void tstMSTGiveTimerReference(TIM_TypeDef *fromUser) {
-	tstMSTTimerReferenceFromUser = fromUser;
-}
-
-static float prvMSTSetupUSClock() {
-	//set prescaler equal to MHz of clock
-	__HAL_RCC_TIM2_CLK_ENABLE();
-	tstMSTTimerReferenceFromUser->PSC = (HAL_RCC_GetPCLK1Freq() / 1000000 - 1);
-	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
-	tstMSTTimerReferenceFromUser->ARR = 0xFFFFFFFF;
-	tstMSTTimerReferenceFromUser->CR1 |= TIM_CR1_CEN;
-	//we have that f_step = 1Mhz and Tstep = 1us, this way we can count us
-	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-	DWT->CYCCNT = 0;
-	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-
-}
-static uint32_t prvMSTGetUS() {
-	uint32_t out = tstMSTTimerReferenceFromUser->CNT;
-	BaseType_t clckFreq = HAL_RCC_GetPCLK1Freq();
-	BaseType_t countFreq = clckFreq / (tstMSTTimerReferenceFromUser->PSC + 1);
-	float timing = 1.0 / (float) countFreq;
-	uint32_t outUS = (DWT->CYCCNT / (24));
-	return outUS;
-}
+	static uint32_t prvMSTGetUS() {
+		/*uint32_t out = tstMSTTimerReferenceFromUser->CNT;
+		BaseType_t clckFreq = HAL_RCC_GetPCLK1Freq();
+		BaseType_t countFreq = clckFreq / (tstMSTTimerReferenceFromUser->PSC + 1);
+		float timing = 1.0 / (float) countFreq;*/
+		uint32_t outUS = (DWT->CYCCNT / (24));
+		return outUS;
+	}
 
 #endif
 
@@ -44,7 +40,15 @@ static void prvMSTSporadicGenericJob(void *pvParameters);
 
 #if(mst_test_PERIODIC_METHOD == 2)
 static void prvMSTPeriodicTimerCallback(TimerHandle_t xTimer);
+#endif
+
 static void prvMSTSporadicTimerCallback(TimerHandle_t xTimer);
+
+#if mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS
+	static BaseType_t vTasksListInit = pdFALSE;
+	static List_t xTasksList;	
+	static BaseType_t xPeriodicTasksNumber;
+	#define prvSTARTING_PRIORITY 5
 #endif
 
 /*
@@ -144,6 +148,7 @@ TaskHandle_t vMSTPeriodicTaskCreate(TaskFunction_t pvJobCode,
 		/*
 		 Allocate, fill extended TCB using local task storage
 		 */
+
 		xNewExtTCB = (extTCB_t*) pvPortMalloc(sizeof(extTCB_t));
 		*xNewExtTCB = (extTCB_t ) { .pvJobCode = pvJobCode, .pcName = pcName,
 						.pvParameters = pvParameters, .uxPriority = uxPriority,
@@ -155,6 +160,19 @@ TaskHandle_t vMSTPeriodicTaskCreate(TaskFunction_t pvJobCode,
 						.xPrevFinishTime = 0, .xNextIdealReleaseTime = 0,
 						.xTaskInitDone = pdFALSE, .uNumOfMissedDeadlines = 0 };
 
+		#if (mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS)
+			if(vTasksListInit == pdFALSE){
+				vTasksListInit = pdTRUE;
+				vListInitialise(&xTasksList);
+				xPeriodicTasksNumber = 0;
+			}
+			ListItem_t pxTaskTCBListItem; //SHOULD ADD LIST ITEM TO TCB
+			listSET_LIST_ITEM_OWNER(&(pxTaskTCBListItem), xNewExtTCB);
+			listSET_LIST_ITEM_VALUE(&(pxTaskTCBListItem), xTaskPeriod);
+			vListInitialiseItem(&pxTaskTCBListItem);
+			vListInsertEnd(&xTasksList, &pxTaskTCBListItem);
+			xPeriodicTasksNumber++;
+		#endif 
         #if (mst_test_PERIODIC_METHOD == 2)
 		    /*
 		     Create the timer,
@@ -244,9 +262,7 @@ static void prvMSTPeriodicGenericJob(void *pvParameters) {
 				//calculate the gap between perfect and absolute gap in us and update the avg
 				xCurrExtTCB->xUsFromIdealRelease += prvMSTGetUS() - perfRelease;
 				if (xCurrExtTCB->xNumOfIterations > 0) {
-					xCurrExtTCB->xUsAverageReleaseGap =
-							(xCurrExtTCB->xUsFromIdealRelease)
-									/ (xCurrExtTCB->xNumOfIterations);
+					xCurrExtTCB->xUsAverageReleaseGap = (xCurrExtTCB->xUsFromIdealRelease) / (xCurrExtTCB->xNumOfIterations);
 				}
 			#if(mst_test_PERIODIC_METHOD == 1)
 							xCurrExtTCB->xNumOfIterations++;
@@ -258,8 +274,7 @@ static void prvMSTPeriodicGenericJob(void *pvParameters) {
 		xCurrExtTCB->xPrevStartTime = xTaskGetTickCount();
 		xCurrExtTCB->pvJobCode(pvParameters);
 		xCurrExtTCB->xPrevFinishTime = xTaskGetTickCount();
-		xCurrExtTCB->xPrevExecTime = xCurrExtTCB->xPrevFinishTime
-				- xCurrExtTCB->xPrevStartTime;
+		xCurrExtTCB->xPrevExecTime = xCurrExtTCB->xPrevFinishTime - xCurrExtTCB->xPrevStartTime;
 
 		if (xCurrExtTCB->xPrevExecTime > xCurrExtTCB->xTaskDeadline) {
 			//current task got over the deadline, make notice of the event
@@ -336,7 +351,6 @@ BaseType_t vMSTSporadicTaskCreate(TaskFunction_t pvJobCode, const char *pcName,
 						.xJobCalled = pdFALSE, .xInterarrivalTimerRunning =
 								pdFALSE };
 
-		//TODO: implement with delays ( == 1)
 		/*
 		 We create the task and allocate, but we do not clear the mutex nor start the timer
 		 */
@@ -362,12 +376,7 @@ static void prvMSTSporadicGenericJob(void *pvParameters) {
 	extTCB_t *xCurrExtTCB = (extTCB_t*) pvTaskGetThreadLocalStoragePointer(
 			xCurrentHandle, mstLOCAL_STORAGE_DATA_INDEX);
 	configASSERT(xCurrExtTCB != NULL);
-
 	for (;;) {
-		#if(mst_test_PERIODIC_METHOD == 1)
-            //TODO: implement
-            return;
-        #elif(mst_test_PERIODIC_METHOD == 2)
 		/*
 		 Takes notification for current task, could be from timer or user
 		 */
@@ -403,7 +412,7 @@ static void prvMSTSporadicGenericJob(void *pvParameters) {
 		xCurrExtTCB->xInterarrivalTimerRunning = pdTRUE;
 		xCurrExtTCB->xJobCalled = pdFALSE;
 		taskEXIT_CRITICAL();
-#endif
+
 		xCurrExtTCB->xPrevStartTime = xTaskGetTickCount();
 		xCurrExtTCB->pvJobCode(pvParameters);
 		/*
@@ -422,19 +431,52 @@ BaseType_t vMSTSporadicTaskRun(TaskHandle_t *pxTaskToRunHandle) {
 	 */
 	extTCB_t *xCurrExtTCB = (extTCB_t*) pvTaskGetThreadLocalStoragePointer(
 			*pxTaskToRunHandle, mstLOCAL_STORAGE_DATA_INDEX);
-	enum sporadicTaskNotifyGiver_e giver = userRequest;
-	xTaskNotify(*pxTaskToRunHandle, (uint32_t )giver, eSetValueWithOverwrite);
+	
 	if (xCurrExtTCB == NULL) {
 		return pdFAIL;
 	} else {
+		enum sporadicTaskNotifyGiver_e giver = userRequest;
+		xTaskNotify(*pxTaskToRunHandle, (uint32_t )giver, eSetValueWithOverwrite);
 		return pdPASS;
 	}
 }
+
+
+#if mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS
+	static int compare(const void *arg1, const void *arg2){
+		return (((extTCB_t *)((ListItem_t *)arg1)->pvOwner)->xTaskPeriod > ((extTCB_t *)((ListItem_t *)arg2)->pvOwner)->xTaskPeriod);
+	}
+#endif
 
 /*
  MST version of scheduler start
  */
 void vMSTSchedulerStart(void) {
-	prvMSTSetupUSClock();
+	#if(TESTING_STM32 == 1)
+		prvMSTSetupUSClock();
+	#endif
+	/*
+	Set rate monotonic priorities
+	*/
+	#if (mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS)
+		/*
+		We go trough the created periodic tasks and change priority accordingly
+		*/
+		ListItem_t * listArray[xPeriodicTasksNumber];
+		//transfer linked list to array
+		int i = 0;
+		for(ListItem_t * xItm =  (&xTasksList)->pxIndex; xItm != NULL; xItm = xItm->pxNext, i++){
+			listArray[i] = xItm;
+			TickType_t deb1 =  (extTCB_t *)listGET_LIST_ITEM_VALUE(listArray[i]);
+			//;((extTCB_t *)listArray[i]->pvOwner)->xTaskPeriod;
+			int haga = 0;
+		}
+		//sort array of tasks
+		qsort(listArray, xPeriodicTasksNumber, sizeof(ListItem_t), compare);
+		//go trough sorted array and sort from priority prvSTARTING_PRIORITY
+		static UBaseType_t uxUsedPriority = prvSTARTING_PRIORITY;
+		for(UBaseType_t xCurrInx = 0; xCurrInx < xPeriodicTasksNumber; xCurrInx++) (((extTCB_t *)listArray[xCurrInx]->pvOwner)->uxPriority = uxUsedPriority++);
+	#endif
 	vTaskStartScheduler();
+	
 }

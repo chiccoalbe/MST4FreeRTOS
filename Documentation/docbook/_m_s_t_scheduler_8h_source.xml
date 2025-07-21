@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="__m_s_t_scheduler_8h_source" xml:lang="en-US">
+<title>MSTScheduler.h</title>
+Go to the documentation of this file.<programlisting linenumbering="unnumbered">1 
+26 <emphasis role="preprocessor">#ifndef&#32;_MST_SCHEDULER_H</emphasis>
+27 <emphasis role="preprocessor">#&#32;&#32;&#32;define&#32;_MST_SCHEDULER_H</emphasis>
+28 
+29 <emphasis role="preprocessor">#include&#32;&quot;FreeRTOS.h&quot;</emphasis>
+30 <emphasis role="preprocessor">#include&#32;&quot;task.h&quot;</emphasis>
+31 <emphasis role="preprocessor">#include&#32;&quot;list.h&quot;</emphasis>
+32 <emphasis role="preprocessor">#include&#32;&quot;timers.h&quot;</emphasis>
+33 
+41 <emphasis role="preprocessor">#define&#32;mst_test_PERIODIC_METHOD&#32;2</emphasis>
+42 
+46 <emphasis role="preprocessor">#define&#32;mst_schedSCHEDULING_DEFAULT&#32;1</emphasis>
+47 
+51 <emphasis role="preprocessor">#define&#32;mst_schedSCHEDULING_RMS&#32;2</emphasis>
+52 
+56 <emphasis role="preprocessor">#define&#32;mst_schedSCHEDULING_EDF&#32;3</emphasis>
+57 
+63 <emphasis role="preprocessor">#define&#32;mst_schedSCHEDULING_POLICY&#32;mst_schedSCHEDULING_RMS</emphasis>
+64 
+65 <emphasis role="preprocessor">#ifndef&#32;configNUM_THREAD_LOCAL_STORAGE_POINTERS</emphasis>
+71 <emphasis role="preprocessor">#define&#32;configNUM_THREAD_LOCAL_STORAGE_POINTERS&#32;3</emphasis>
+72 <emphasis role="preprocessor">#endif</emphasis>
+73 
+77 <emphasis role="preprocessor">#define&#32;TESTING_STM32&#32;1</emphasis>
+78 
+79 <emphasis role="preprocessor">#if&#32;(TESTING_STM32&#32;==&#32;1)</emphasis>
+85 <emphasis role="preprocessor">#include&#32;&quot;stm32f4xx_hal.h&quot;</emphasis>
+86 
+87 <emphasis role="preprocessor">#endif</emphasis>
+88 
+95 <emphasis role="keywordtype">void</emphasis>&#32;<link linkend="__m_s_t_scheduler_8h_1aa1da0320aadb954f0b613dde3b26d82a">vMSTSchedulerInit</link>(<emphasis role="keywordtype">void</emphasis>);
+96 
+102 <emphasis role="keywordtype">void</emphasis>&#32;<link linkend="__m_s_t_scheduler_8h_1a492648b07031a66c57fb4bdd663fcd1b">vMSTSchedulerStart</link>(<emphasis role="keywordtype">void</emphasis>);
+103 
+123 TaskHandle_t&#32;<link linkend="__m_s_t_scheduler_8h_1a0cac2b331abbc97d11dcf768a5f1f677">vMSTPeriodicTaskCreate</link>(
+124 &#32;&#32;&#32;&#32;TaskFunction_t&#32;pvJobCode,
+125 &#32;&#32;&#32;&#32;<emphasis role="keyword">const</emphasis>&#32;<emphasis role="keywordtype">char</emphasis>&#32;*<emphasis role="keyword">const</emphasis>&#32;pcName,
+126 &#32;&#32;&#32;&#32;uint16_t&#32;usStackDepth,
+127 &#32;&#32;&#32;&#32;<emphasis role="keywordtype">void</emphasis>&#32;*pvParameters,
+128 &#32;&#32;&#32;&#32;UBaseType_t&#32;uxPriority,
+129 &#32;&#32;&#32;&#32;TaskHandle_t&#32;*pxCreatedTask,
+130 &#32;&#32;&#32;&#32;TickType_t&#32;xTaskPeriod,
+131 &#32;&#32;&#32;&#32;TickType_t&#32;xTaskDeadline,
+132 &#32;&#32;&#32;&#32;TickType_t&#32;xTaskPhase,
+133 &#32;&#32;&#32;&#32;TickType_t&#32;xTaskWCET
+134 );
+135 
+155 BaseType_t&#32;<link linkend="__m_s_t_scheduler_8h_1a1a94a42f8ee5ff9b422af2fe09cac749">vMSTSporadicTaskCreate</link>(
+156 &#32;&#32;&#32;&#32;TaskFunction_t&#32;pvJobCode,
+157 &#32;&#32;&#32;&#32;<emphasis role="keyword">const</emphasis>&#32;<emphasis role="keywordtype">char</emphasis>&#32;*<emphasis role="keyword">const</emphasis>&#32;pcName,
+158 &#32;&#32;&#32;&#32;uint16_t&#32;usStackDepth,
+159 &#32;&#32;&#32;&#32;<emphasis role="keywordtype">void</emphasis>&#32;*pvParameters,
+160 &#32;&#32;&#32;&#32;UBaseType_t&#32;uxPriority,
+161 &#32;&#32;&#32;&#32;TaskHandle_t&#32;*pxCreatedTask,
+162 &#32;&#32;&#32;&#32;TickType_t&#32;xTaskInterarrivalTime,
+163 &#32;&#32;&#32;&#32;TickType_t&#32;xTaskDeadline,
+164 &#32;&#32;&#32;&#32;TickType_t&#32;xTaskWCET
+165 );
+166 
+175 BaseType_t&#32;<link linkend="__m_s_t_scheduler_8h_1a17d15fad92b9b2a43d0d645d6d021e7a">vMSTSporadicTaskRun</link>(TaskHandle_t&#32;*pxTaskToRunHandle);
+176 
+177 <emphasis role="preprocessor">#endif&#32;</emphasis><emphasis role="comment">/*&#32;_MST_SCHEDULER_H&#32;*/</emphasis><emphasis role="preprocessor"></emphasis>
+</programlisting></section>
