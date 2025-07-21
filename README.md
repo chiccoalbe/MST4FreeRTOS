@@ -7,7 +7,7 @@
 - [x]  Rate monotonic scheduling
 - [x]  Earliest deadline first scheduling
   - [ ]  Bug: list owner wrong pointer
-- [ ]  Fixed priority sporadic server
+- [ ]  Fixed priority sporadic server (80% done)
 - [ ]  Sporadic tasks with acceptance in static priority
 - [ ]  Sporadic tasks with acceptance in dynamic priority 
 
