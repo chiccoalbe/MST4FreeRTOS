@@ -6,9 +6,8 @@
   - [ ]  Bug: Now need at least 1ms interarrival, lets remove this
 - [x]  Rate monotonic scheduling
 - [x]  Earliest deadline first scheduling
-  - [ ]  Bug: list owner wrong pointer
-- [ ]  Fixed priority sporadic server
-- [ ]  Sporadic tasks with acceptance in static priority
+- [x]  Fixed priority sporadic server
+- [ ]  Sporadic tasks with acceptance in static priority (90% done)
 - [ ]  Sporadic tasks with acceptance in dynamic priority 
 
 

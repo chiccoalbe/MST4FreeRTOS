@@ -88,72 +88,80 @@ $(function(){ initResizable(false); });
 </div><!--header-->
 <div class="contents">
 <a href="_m_s_t_scheduler_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span> </div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="preprocessor">#ifndef _MST_SCHEDULER_H</span></div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#   define _MST_SCHEDULER_H</span></div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="preprocessor">#include &quot;FreeRTOS.h&quot;</span></div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="preprocessor">#include &quot;task.h&quot;</span></div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="preprocessor">#include &quot;list.h&quot;</span></div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="preprocessor">#include &quot;timers.h&quot;</span></div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span> </div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#ab3716d48b08f5c9e9bd532b1f52bb368">   41</a></span><span class="preprocessor">#define mst_test_PERIODIC_METHOD 2</span></div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#ab3e1bcde626694b3a15c5265e2632d1e">   46</a></span><span class="preprocessor">#define mst_schedSCHEDULING_DEFAULT 1</span></div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#ab1e4dfd847a2b77cff70f52a11d43b99">   51</a></span><span class="preprocessor">#define mst_schedSCHEDULING_RMS 2</span></div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#a054e872253a5d6dda7a0fa5e1bdbecf3">   56</a></span><span class="preprocessor">#define mst_schedSCHEDULING_EDF 3</span></div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#a6cefe977c72d7ed604361ef43e822a44">   63</a></span><span class="preprocessor">#define mst_schedSCHEDULING_POLICY mst_schedSCHEDULING_RMS</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor">#ifndef _MST_SCHEDULER_H</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">#   define _MST_SCHEDULER_H</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#include &quot;FreeRTOS.h&quot;</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor">#include &quot;task.h&quot;</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="preprocessor">#include &quot;list.h&quot;</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="preprocessor">#include &quot;timers.h&quot;</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="preprocessor">#include &quot;stdbool.h&quot;</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#ab3716d48b08f5c9e9bd532b1f52bb368">   40</a></span><span class="preprocessor">#define mst_test_PERIODIC_METHOD 2</span></div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#ab3e1bcde626694b3a15c5265e2632d1e">   45</a></span><span class="preprocessor">#define mst_schedSCHEDULING_DEFAULT 1</span></div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span> </div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#ab1e4dfd847a2b77cff70f52a11d43b99">   50</a></span><span class="preprocessor">#define mst_schedSCHEDULING_RMS 2</span></div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#a054e872253a5d6dda7a0fa5e1bdbecf3">   55</a></span><span class="preprocessor">#define mst_schedSCHEDULING_EDF 3</span></div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#a6cefe977c72d7ed604361ef43e822a44">   62</a></span><span class="preprocessor">#define mst_schedSCHEDULING_POLICY mst_schedSCHEDULING_RMS</span></div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
 <div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="preprocessor">#ifndef configNUM_THREAD_LOCAL_STORAGE_POINTERS</span></div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#a8d32b5f74e55dfd12c5aa3415e16d75e">   71</a></span><span class="preprocessor">#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 3</span></div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#aa07ee2f925db16beaf235590c336d015">   72</a></span><span class="preprocessor">#define mst_USE_SPORADIC_SERVER 1</span></div>
 <div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#ab1c45ea62248c332df47b9b858586ab3">   77</a></span><span class="preprocessor">#define TESTING_STM32 1</span></div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span><span class="preprocessor">#if (TESTING_STM32 == 1)</span></div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span><span class="preprocessor">#include &quot;stm32f4xx_hal.h&quot;</span></div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span> </div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="preprocessor">#ifndef configNUM_THREAD_LOCAL_STORAGE_POINTERS</span></div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#a8d32b5f74e55dfd12c5aa3415e16d75e">   81</a></span><span class="preprocessor">#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 3</span></div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span> </div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#ab1c45ea62248c332df47b9b858586ab3">   87</a></span><span class="preprocessor">#define TESTING_STM32 1</span></div>
 <div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span> </div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#aa1da0320aadb954f0b613dde3b26d82a">   95</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="_m_s_t_scheduler_8h.html#aa1da0320aadb954f0b613dde3b26d82a">vMSTSchedulerInit</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="preprocessor">#if (TESTING_STM32 == 1)</span></div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="preprocessor">#include &quot;stm32f4xx_hal.h&quot;</span></div>
 <div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span> </div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="keywordtype">void</span> <a class="code hl_function" href="_m_s_t_scheduler_8h.html#a492648b07031a66c57fb4bdd663fcd1b">vMSTSchedulerStart</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span> </div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>TaskHandle_t <a class="code hl_function" href="_m_s_t_scheduler_8h.html#a0cac2b331abbc97d11dcf768a5f1f677">vMSTPeriodicTaskCreate</a>(</div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    TaskFunction_t pvJobCode,</div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    <span class="keyword">const</span> <span class="keywordtype">char</span> *<span class="keyword">const</span> pcName,</div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>    uint16_t usStackDepth,</div>
-<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    <span class="keywordtype">void</span> *pvParameters,</div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    UBaseType_t uxPriority,</div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    TaskHandle_t *pxCreatedTask,</div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>    TickType_t xTaskPeriod,</div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>    TickType_t xTaskDeadline,</div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>    TickType_t xTaskPhase,</div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    TickType_t xTaskWCET</div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>);</div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span> </div>
-<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>BaseType_t <a class="code hl_function" href="_m_s_t_scheduler_8h.html#a1a94a42f8ee5ff9b422af2fe09cac749">vMSTSporadicTaskCreate</a>(</div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>    TaskFunction_t pvJobCode,</div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>    <span class="keyword">const</span> <span class="keywordtype">char</span> *<span class="keyword">const</span> pcName,</div>
-<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>    uint16_t usStackDepth,</div>
-<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>    <span class="keywordtype">void</span> *pvParameters,</div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>    UBaseType_t uxPriority,</div>
-<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>    TaskHandle_t *pxCreatedTask,</div>
-<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>    TickType_t xTaskInterarrivalTime,</div>
-<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>    TickType_t xTaskDeadline,</div>
-<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>    TickType_t xTaskWCET</div>
-<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>);</div>
-<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span> </div>
-<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>BaseType_t <a class="code hl_function" href="_m_s_t_scheduler_8h.html#a17d15fad92b9b2a43d0d645d6d021e7a">vMSTSporadicTaskRun</a>(TaskHandle_t *pxTaskToRunHandle);</div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span> </div>
-<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span><span class="preprocessor">#endif </span><span class="comment">/* _MST_SCHEDULER_H */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="a_m_s_t_scheduler_8h_html_a0cac2b331abbc97d11dcf768a5f1f677"><div class="ttname"><a href="_m_s_t_scheduler_8h.html#a0cac2b331abbc97d11dcf768a5f1f677">vMSTPeriodicTaskCreate</a></div><div class="ttdeci">TaskHandle_t vMSTPeriodicTaskCreate(TaskFunction_t pvJobCode, const char *const pcName, uint16_t usStackDepth, void *pvParameters, UBaseType_t uxPriority, TaskHandle_t *pxCreatedTask, TickType_t xTaskPeriod, TickType_t xTaskDeadline, TickType_t xTaskPhase, TickType_t xTaskWCET)</div><div class="ttdoc">Creates a periodic task.</div><div class="ttdef"><b>Definition</b> MSTScheduler.c:134</div></div>
-<div class="ttc" id="a_m_s_t_scheduler_8h_html_a17d15fad92b9b2a43d0d645d6d021e7a"><div class="ttname"><a href="_m_s_t_scheduler_8h.html#a17d15fad92b9b2a43d0d645d6d021e7a">vMSTSporadicTaskRun</a></div><div class="ttdeci">BaseType_t vMSTSporadicTaskRun(TaskHandle_t *pxTaskToRunHandle)</div><div class="ttdoc">Runs a sporadic job if the interarrival time has passed.</div><div class="ttdef"><b>Definition</b> MSTScheduler.c:427</div></div>
-<div class="ttc" id="a_m_s_t_scheduler_8h_html_a1a94a42f8ee5ff9b422af2fe09cac749"><div class="ttname"><a href="_m_s_t_scheduler_8h.html#a1a94a42f8ee5ff9b422af2fe09cac749">vMSTSporadicTaskCreate</a></div><div class="ttdeci">BaseType_t vMSTSporadicTaskCreate(TaskFunction_t pvJobCode, const char *const pcName, uint16_t usStackDepth, void *pvParameters, UBaseType_t uxPriority, TaskHandle_t *pxCreatedTask, TickType_t xTaskInterarrivalTime, TickType_t xTaskDeadline, TickType_t xTaskWCET)</div><div class="ttdoc">Creates a sporadic task.</div><div class="ttdef"><b>Definition</b> MSTScheduler.c:332</div></div>
-<div class="ttc" id="a_m_s_t_scheduler_8h_html_a492648b07031a66c57fb4bdd663fcd1b"><div class="ttname"><a href="_m_s_t_scheduler_8h.html#a492648b07031a66c57fb4bdd663fcd1b">vMSTSchedulerStart</a></div><div class="ttdeci">void vMSTSchedulerStart(void)</div><div class="ttdoc">Starts the MST Scheduler.</div><div class="ttdef"><b>Definition</b> MSTScheduler.c:454</div></div>
-<div class="ttc" id="a_m_s_t_scheduler_8h_html_aa1da0320aadb954f0b613dde3b26d82a"><div class="ttname"><a href="_m_s_t_scheduler_8h.html#aa1da0320aadb954f0b613dde3b26d82a">vMSTSchedulerInit</a></div><div class="ttdeci">void vMSTSchedulerInit(void)</div><div class="ttdoc">Includes the HAL library for STM32F4 boards.</div></div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span> </div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#a795e545979bdaa7a589a4d3a88b1000e">   99</a></span><span class="preprocessor">#define NOTIFY_INTERARRIVAL_TIMER (1 &lt;&lt; 0)</span></div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span><span class="preprocessor">#define NOTIFY_USER_REQUEST       (1 &lt;&lt; 1)</span></div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span> </div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno"><a class="line" href="_m_s_t_scheduler_8h.html#aa1da0320aadb954f0b613dde3b26d82a">  109</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="_m_s_t_scheduler_8h.html#aa1da0320aadb954f0b613dde3b26d82a">vMSTSchedulerInit</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span> </div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span><span class="keywordtype">void</span> <a class="code hl_function" href="_m_s_t_scheduler_8h.html#a492648b07031a66c57fb4bdd663fcd1b">vMSTSchedulerStart</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span> </div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>TaskHandle_t <a class="code hl_function" href="_m_s_t_scheduler_8h.html#a0cac2b331abbc97d11dcf768a5f1f677">vMSTPeriodicTaskCreate</a>(</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>    TaskFunction_t pvJobCode,</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>    <span class="keyword">const</span> <span class="keywordtype">char</span> *<span class="keyword">const</span> pcName,</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>    uint16_t usStackDepth,</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>    <span class="keywordtype">void</span> *pvParameters,</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>    UBaseType_t uxPriority,</div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>    TaskHandle_t *pxCreatedTask,</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>    TickType_t xTaskPeriod,</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>    TickType_t xTaskDeadline,</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>    TickType_t xTaskPhase,</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>    TickType_t xTaskWCET</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>);</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span> </div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>BaseType_t <a class="code hl_function" href="_m_s_t_scheduler_8h.html#a1a94a42f8ee5ff9b422af2fe09cac749">vMSTSporadicTaskCreate</a>(</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>    TaskFunction_t pvJobCode,</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>    <span class="keyword">const</span> <span class="keywordtype">char</span> *<span class="keyword">const</span> pcName,</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>    uint16_t usStackDepth,</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>    <span class="keywordtype">void</span> *pvParameters,</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>    UBaseType_t uxPriority,</div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>    TaskHandle_t *pxCreatedTask,</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>    TickType_t xTaskInterarrivalTime,</div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>    TickType_t xTaskDeadline,</div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>    TickType_t xTaskWCET</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>);</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span> </div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>BaseType_t <a class="code hl_function" href="_m_s_t_scheduler_8h.html#a17d15fad92b9b2a43d0d645d6d021e7a">vMSTSporadicTaskRun</a>(TaskHandle_t *pxTaskToRunHandle);</div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span> </div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span><span class="preprocessor">#endif </span><span class="comment">/* _MST_SCHEDULER_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="a_m_s_t_scheduler_8h_html_a0cac2b331abbc97d11dcf768a5f1f677"><div class="ttname"><a href="_m_s_t_scheduler_8h.html#a0cac2b331abbc97d11dcf768a5f1f677">vMSTPeriodicTaskCreate</a></div><div class="ttdeci">TaskHandle_t vMSTPeriodicTaskCreate(TaskFunction_t pvJobCode, const char *const pcName, uint16_t usStackDepth, void *pvParameters, UBaseType_t uxPriority, TaskHandle_t *pxCreatedTask, TickType_t xTaskPeriod, TickType_t xTaskDeadline, TickType_t xTaskPhase, TickType_t xTaskWCET)</div><div class="ttdoc">Creates a periodic task.</div><div class="ttdef"><b>Definition</b> MSTScheduler.c:169</div></div>
+<div class="ttc" id="a_m_s_t_scheduler_8h_html_a17d15fad92b9b2a43d0d645d6d021e7a"><div class="ttname"><a href="_m_s_t_scheduler_8h.html#a17d15fad92b9b2a43d0d645d6d021e7a">vMSTSporadicTaskRun</a></div><div class="ttdeci">BaseType_t vMSTSporadicTaskRun(TaskHandle_t *pxTaskToRunHandle)</div><div class="ttdoc">Runs a sporadic job if the interarrival time has passed.</div><div class="ttdef"><b>Definition</b> MSTScheduler.c:466</div></div>
+<div class="ttc" id="a_m_s_t_scheduler_8h_html_a1a94a42f8ee5ff9b422af2fe09cac749"><div class="ttname"><a href="_m_s_t_scheduler_8h.html#a1a94a42f8ee5ff9b422af2fe09cac749">vMSTSporadicTaskCreate</a></div><div class="ttdeci">BaseType_t vMSTSporadicTaskCreate(TaskFunction_t pvJobCode, const char *const pcName, uint16_t usStackDepth, void *pvParameters, UBaseType_t uxPriority, TaskHandle_t *pxCreatedTask, TickType_t xTaskInterarrivalTime, TickType_t xTaskDeadline, TickType_t xTaskWCET)</div><div class="ttdoc">Creates a sporadic task.</div><div class="ttdef"><b>Definition</b> MSTScheduler.c:362</div></div>
+<div class="ttc" id="a_m_s_t_scheduler_8h_html_a492648b07031a66c57fb4bdd663fcd1b"><div class="ttname"><a href="_m_s_t_scheduler_8h.html#a492648b07031a66c57fb4bdd663fcd1b">vMSTSchedulerStart</a></div><div class="ttdeci">void vMSTSchedulerStart(void)</div><div class="ttdoc">Starts the MST Scheduler.</div><div class="ttdef"><b>Definition</b> MSTScheduler.c:548</div></div>
+<div class="ttc" id="a_m_s_t_scheduler_8h_html_aa1da0320aadb954f0b613dde3b26d82a"><div class="ttname"><a href="_m_s_t_scheduler_8h.html#aa1da0320aadb954f0b613dde3b26d82a">vMSTSchedulerInit</a></div><div class="ttdeci">void vMSTSchedulerInit(void)</div><div class="ttdoc">Initializes the MST Scheduler.</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

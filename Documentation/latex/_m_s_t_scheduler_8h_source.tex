@@ -2,66 +2,74 @@
 \hypertarget{_m_s_t_scheduler_8h_source}{}\label{_m_s_t_scheduler_8h_source}\mbox{\hyperlink{_m_s_t_scheduler_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{00001\ }
-\DoxyCodeLine{00026\ \textcolor{preprocessor}{\#ifndef\ \_MST\_SCHEDULER\_H}}
-\DoxyCodeLine{00027\ \textcolor{preprocessor}{\#\ \ \ define\ \_MST\_SCHEDULER\_H}}
-\DoxyCodeLine{00028\ }
-\DoxyCodeLine{00029\ \textcolor{preprocessor}{\#include\ "{}FreeRTOS.h"{}}}
-\DoxyCodeLine{00030\ \textcolor{preprocessor}{\#include\ "{}task.h"{}}}
-\DoxyCodeLine{00031\ \textcolor{preprocessor}{\#include\ "{}list.h"{}}}
-\DoxyCodeLine{00032\ \textcolor{preprocessor}{\#include\ "{}timers.h"{}}}
-\DoxyCodeLine{00033\ }
-\DoxyCodeLine{00041\ \textcolor{preprocessor}{\#define\ mst\_test\_PERIODIC\_METHOD\ 2}}
-\DoxyCodeLine{00042\ }
-\DoxyCodeLine{00046\ \textcolor{preprocessor}{\#define\ mst\_schedSCHEDULING\_DEFAULT\ 1}}
-\DoxyCodeLine{00047\ }
-\DoxyCodeLine{00051\ \textcolor{preprocessor}{\#define\ mst\_schedSCHEDULING\_RMS\ 2}}
-\DoxyCodeLine{00052\ }
-\DoxyCodeLine{00056\ \textcolor{preprocessor}{\#define\ mst\_schedSCHEDULING\_EDF\ 3}}
-\DoxyCodeLine{00057\ }
-\DoxyCodeLine{00063\ \textcolor{preprocessor}{\#define\ mst\_schedSCHEDULING\_POLICY\ mst\_schedSCHEDULING\_RMS}}
+\DoxyCodeLine{00024\ \textcolor{preprocessor}{\#ifndef\ \_MST\_SCHEDULER\_H}}
+\DoxyCodeLine{00025\ \textcolor{preprocessor}{\#\ \ \ define\ \_MST\_SCHEDULER\_H}}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \textcolor{preprocessor}{\#include\ "{}FreeRTOS.h"{}}}
+\DoxyCodeLine{00028\ \textcolor{preprocessor}{\#include\ "{}task.h"{}}}
+\DoxyCodeLine{00029\ \textcolor{preprocessor}{\#include\ "{}list.h"{}}}
+\DoxyCodeLine{00030\ \textcolor{preprocessor}{\#include\ "{}timers.h"{}}}
+\DoxyCodeLine{00031\ \textcolor{preprocessor}{\#include\ "{}stdbool.h"{}}}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00040\ \textcolor{preprocessor}{\#define\ mst\_test\_PERIODIC\_METHOD\ 2}}
+\DoxyCodeLine{00041\ }
+\DoxyCodeLine{00045\ \textcolor{preprocessor}{\#define\ mst\_schedSCHEDULING\_DEFAULT\ 1}}
+\DoxyCodeLine{00046\ }
+\DoxyCodeLine{00050\ \textcolor{preprocessor}{\#define\ mst\_schedSCHEDULING\_RMS\ 2}}
+\DoxyCodeLine{00051\ }
+\DoxyCodeLine{00055\ \textcolor{preprocessor}{\#define\ mst\_schedSCHEDULING\_EDF\ 3}}
+\DoxyCodeLine{00056\ }
+\DoxyCodeLine{00062\ \textcolor{preprocessor}{\#define\ mst\_schedSCHEDULING\_POLICY\ mst\_schedSCHEDULING\_RMS}}
+\DoxyCodeLine{00063\ }
 \DoxyCodeLine{00064\ }
-\DoxyCodeLine{00065\ \textcolor{preprocessor}{\#ifndef\ configNUM\_THREAD\_LOCAL\_STORAGE\_POINTERS}}
-\DoxyCodeLine{00071\ \textcolor{preprocessor}{\#define\ configNUM\_THREAD\_LOCAL\_STORAGE\_POINTERS\ 3}}
-\DoxyCodeLine{00072\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00072\ \textcolor{preprocessor}{\#define\ mst\_USE\_SPORADIC\_SERVER\ 1}}
 \DoxyCodeLine{00073\ }
-\DoxyCodeLine{00077\ \textcolor{preprocessor}{\#define\ TESTING\_STM32\ 1}}
-\DoxyCodeLine{00078\ }
-\DoxyCodeLine{00079\ \textcolor{preprocessor}{\#if\ (TESTING\_STM32\ ==\ 1)}}
-\DoxyCodeLine{00085\ \textcolor{preprocessor}{\#include\ "{}stm32f4xx\_hal.h"{}}}
-\DoxyCodeLine{00086\ }
-\DoxyCodeLine{00087\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00074\ }
+\DoxyCodeLine{00075\ \textcolor{preprocessor}{\#ifndef\ configNUM\_THREAD\_LOCAL\_STORAGE\_POINTERS}}
+\DoxyCodeLine{00081\ \textcolor{preprocessor}{\#define\ configNUM\_THREAD\_LOCAL\_STORAGE\_POINTERS\ 3}}
+\DoxyCodeLine{00082\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00083\ }
+\DoxyCodeLine{00087\ \textcolor{preprocessor}{\#define\ TESTING\_STM32\ 1}}
 \DoxyCodeLine{00088\ }
-\DoxyCodeLine{00095\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{_m_s_t_scheduler_8h_aa1da0320aadb954f0b613dde3b26d82a}{vMSTSchedulerInit}}(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{00089\ \textcolor{preprocessor}{\#if\ (TESTING\_STM32\ ==\ 1)}}
+\DoxyCodeLine{00095\ \textcolor{preprocessor}{\#include\ "{}stm32f4xx\_hal.h"{}}}
 \DoxyCodeLine{00096\ }
-\DoxyCodeLine{00102\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{_m_s_t_scheduler_8h_a492648b07031a66c57fb4bdd663fcd1b}{vMSTSchedulerStart}}(\textcolor{keywordtype}{void});}
-\DoxyCodeLine{00103\ }
-\DoxyCodeLine{00123\ TaskHandle\_t\ \mbox{\hyperlink{_m_s_t_scheduler_8h_a0cac2b331abbc97d11dcf768a5f1f677}{vMSTPeriodicTaskCreate}}(}
-\DoxyCodeLine{00124\ \ \ \ \ TaskFunction\_t\ pvJobCode,}
-\DoxyCodeLine{00125\ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\textcolor{keyword}{const}\ pcName,}
-\DoxyCodeLine{00126\ \ \ \ \ uint16\_t\ usStackDepth,}
-\DoxyCodeLine{00127\ \ \ \ \ \textcolor{keywordtype}{void}\ *pvParameters,}
-\DoxyCodeLine{00128\ \ \ \ \ UBaseType\_t\ uxPriority,}
-\DoxyCodeLine{00129\ \ \ \ \ TaskHandle\_t\ *pxCreatedTask,}
-\DoxyCodeLine{00130\ \ \ \ \ TickType\_t\ xTaskPeriod,}
-\DoxyCodeLine{00131\ \ \ \ \ TickType\_t\ xTaskDeadline,}
-\DoxyCodeLine{00132\ \ \ \ \ TickType\_t\ xTaskPhase,}
-\DoxyCodeLine{00133\ \ \ \ \ TickType\_t\ xTaskWCET}
-\DoxyCodeLine{00134\ );}
-\DoxyCodeLine{00135\ }
-\DoxyCodeLine{00155\ BaseType\_t\ \mbox{\hyperlink{_m_s_t_scheduler_8h_a1a94a42f8ee5ff9b422af2fe09cac749}{vMSTSporadicTaskCreate}}(}
-\DoxyCodeLine{00156\ \ \ \ \ TaskFunction\_t\ pvJobCode,}
-\DoxyCodeLine{00157\ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\textcolor{keyword}{const}\ pcName,}
-\DoxyCodeLine{00158\ \ \ \ \ uint16\_t\ usStackDepth,}
-\DoxyCodeLine{00159\ \ \ \ \ \textcolor{keywordtype}{void}\ *pvParameters,}
-\DoxyCodeLine{00160\ \ \ \ \ UBaseType\_t\ uxPriority,}
-\DoxyCodeLine{00161\ \ \ \ \ TaskHandle\_t\ *pxCreatedTask,}
-\DoxyCodeLine{00162\ \ \ \ \ TickType\_t\ xTaskInterarrivalTime,}
-\DoxyCodeLine{00163\ \ \ \ \ TickType\_t\ xTaskDeadline,}
-\DoxyCodeLine{00164\ \ \ \ \ TickType\_t\ xTaskWCET}
-\DoxyCodeLine{00165\ );}
-\DoxyCodeLine{00166\ }
-\DoxyCodeLine{00175\ BaseType\_t\ \mbox{\hyperlink{_m_s_t_scheduler_8h_a17d15fad92b9b2a43d0d645d6d021e7a}{vMSTSporadicTaskRun}}(TaskHandle\_t\ *pxTaskToRunHandle);}
-\DoxyCodeLine{00176\ }
-\DoxyCodeLine{00177\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{/*\ \_MST\_SCHEDULER\_H\ */}\textcolor{preprocessor}{}}
+\DoxyCodeLine{00097\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00098\ }
+\DoxyCodeLine{00099\ \textcolor{preprocessor}{\#define\ NOTIFY\_INTERARRIVAL\_TIMER\ (1\ <<\ 0)}}
+\DoxyCodeLine{00100\ \textcolor{preprocessor}{\#define\ NOTIFY\_USER\_REQUEST\ \ \ \ \ \ \ (1\ <<\ 1)}}
+\DoxyCodeLine{00101\ }
+\DoxyCodeLine{00109\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{_m_s_t_scheduler_8h_aa1da0320aadb954f0b613dde3b26d82a}{vMSTSchedulerInit}}(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{00110\ }
+\DoxyCodeLine{00116\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{_m_s_t_scheduler_8h_a492648b07031a66c57fb4bdd663fcd1b}{vMSTSchedulerStart}}(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{00117\ }
+\DoxyCodeLine{00137\ TaskHandle\_t\ \mbox{\hyperlink{_m_s_t_scheduler_8h_a0cac2b331abbc97d11dcf768a5f1f677}{vMSTPeriodicTaskCreate}}(}
+\DoxyCodeLine{00138\ \ \ \ \ TaskFunction\_t\ pvJobCode,}
+\DoxyCodeLine{00139\ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\textcolor{keyword}{const}\ pcName,}
+\DoxyCodeLine{00140\ \ \ \ \ uint16\_t\ usStackDepth,}
+\DoxyCodeLine{00141\ \ \ \ \ \textcolor{keywordtype}{void}\ *pvParameters,}
+\DoxyCodeLine{00142\ \ \ \ \ UBaseType\_t\ uxPriority,}
+\DoxyCodeLine{00143\ \ \ \ \ TaskHandle\_t\ *pxCreatedTask,}
+\DoxyCodeLine{00144\ \ \ \ \ TickType\_t\ xTaskPeriod,}
+\DoxyCodeLine{00145\ \ \ \ \ TickType\_t\ xTaskDeadline,}
+\DoxyCodeLine{00146\ \ \ \ \ TickType\_t\ xTaskPhase,}
+\DoxyCodeLine{00147\ \ \ \ \ TickType\_t\ xTaskWCET}
+\DoxyCodeLine{00148\ );}
+\DoxyCodeLine{00149\ }
+\DoxyCodeLine{00169\ BaseType\_t\ \mbox{\hyperlink{_m_s_t_scheduler_8h_a1a94a42f8ee5ff9b422af2fe09cac749}{vMSTSporadicTaskCreate}}(}
+\DoxyCodeLine{00170\ \ \ \ \ TaskFunction\_t\ pvJobCode,}
+\DoxyCodeLine{00171\ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\textcolor{keyword}{const}\ pcName,}
+\DoxyCodeLine{00172\ \ \ \ \ uint16\_t\ usStackDepth,}
+\DoxyCodeLine{00173\ \ \ \ \ \textcolor{keywordtype}{void}\ *pvParameters,}
+\DoxyCodeLine{00174\ \ \ \ \ UBaseType\_t\ uxPriority,}
+\DoxyCodeLine{00175\ \ \ \ \ TaskHandle\_t\ *pxCreatedTask,}
+\DoxyCodeLine{00176\ \ \ \ \ TickType\_t\ xTaskInterarrivalTime,}
+\DoxyCodeLine{00177\ \ \ \ \ TickType\_t\ xTaskDeadline,}
+\DoxyCodeLine{00178\ \ \ \ \ TickType\_t\ xTaskWCET}
+\DoxyCodeLine{00179\ );}
+\DoxyCodeLine{00180\ }
+\DoxyCodeLine{00189\ BaseType\_t\ \mbox{\hyperlink{_m_s_t_scheduler_8h_a17d15fad92b9b2a43d0d645d6d021e7a}{vMSTSporadicTaskRun}}(TaskHandle\_t\ *pxTaskToRunHandle);}
+\DoxyCodeLine{00190\ }
+\DoxyCodeLine{00191\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{/*\ \_MST\_SCHEDULER\_H\ */}\textcolor{preprocessor}{}}
 
 \end{DoxyCode}

@@ -1,10 +1,10 @@
 var indexSectionsWithContent =
 {
-  0: "1bcimopstv",
+  0: "1bcimnopstv",
   1: "m",
   2: "m",
   3: "v",
-  4: "cmt",
+  4: "cmnt",
   5: "imp"
 };
 
@@ -21,7 +21,7 @@ var indexSectionNames =
 var indexSectionLabels =
 {
   0: "All",
-  1: "Data Structures",
+  1: "Classes",
   2: "Files",
   3: "Functions",
   4: "Macros",

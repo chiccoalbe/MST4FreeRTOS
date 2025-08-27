@@ -18,9 +18,7 @@
  * @brief Header file for the standard model adaptation library of FreeRTOS.
  * 
  * This file contains definitions and function prototypes for the 
- * Model-Specific Task (MST) scheduler library, which extends FreeRTOS
- * to include additional scheduling policies and support for periodic
- * and sporadic tasks.
+ * Modello STandard (MST) scheduler library, which extends FreeRTOS.
  */
 
 #ifndef _MST_SCHEDULER_H
@@ -30,13 +28,14 @@
 #include "task.h"
 #include "list.h"
 #include "timers.h"
+#include "stdbool.h"
 
 /**
  * @brief Macro to select the technique for periodic task management.
  * 
  * Options:
  * - 1: Using FreeRTOS delays.
- * - 2: Using software timers.
+ * - 2: Using software timers. Highly suggested
  */
 #define mst_test_PERIODIC_METHOD 2
 
@@ -62,6 +61,17 @@
  */
 #define mst_schedSCHEDULING_POLICY mst_schedSCHEDULING_RMS
 
+
+/**
+ * @brief Usage of sporadic server
+ * 
+ * If not selected sporadic tasks will be served without the usage of server
+ * This will mean that sporadics are ran with user-set priority
+ * The sporadic server is used only in case of static scheduling (e.g. RMS)
+ */
+#define mst_USE_SPORADIC_SERVER 1
+
+
 #ifndef configNUM_THREAD_LOCAL_STORAGE_POINTERS
 /**
  * @brief Number of thread-local storage pointers.
@@ -86,11 +96,15 @@
 
 #endif
 
+#define NOTIFY_INTERARRIVAL_TIMER (1 << 0)
+#define NOTIFY_USER_REQUEST       (1 << 1)
+
 /**
  * @brief Initializes the MST Scheduler.
  * 
  * This function sets up the MST scheduler, preparing it to manage
  * tasks based on the selected scheduling policy.
+ * When using MST call this and not "vTaskStartScheduler();"
  */
 void vMSTSchedulerInit(void);
 
@@ -143,7 +157,7 @@ TaskHandle_t vMSTPeriodicTaskCreate(
  * @param pcName Descriptive name for the job.
  * @param usStackDepth Length of the stack for this task, expressed in words.
  * @param pvParameters Parameters passed into the job.
- * @param uxPriority Priority of the job (not used if MST-specific scheduling is used).
+ * @param uxPriority Priority of the job (only used if mst_schedSCHEDULING_POLICY mst_schedSCHEDULING_DEFAULT).
  * @param pxCreatedTask Pointer to the job handle.
  * @param xTaskInterarrivalTime Minimum spacing between releases in milliseconds.
  * @param xTaskDeadline Relative deadline of the task in milliseconds.

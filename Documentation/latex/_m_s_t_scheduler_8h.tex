@@ -9,6 +9,7 @@ Header file for the standard model adaptation library of Free\+RTOS.
 {\ttfamily \#include "{}task.\+h"{}}\newline
 {\ttfamily \#include "{}list.\+h"{}}\newline
 {\ttfamily \#include "{}timers.\+h"{}}\newline
+{\ttfamily \#include "{}stdbool.\+h"{}}\newline
 {\ttfamily \#include "{}stm32f4xx\+\_\+hal.\+h"{}}\newline
 \doxysubsubsection*{Macros}
 \begin{DoxyCompactItemize}
@@ -26,16 +27,23 @@ Header file for the standard model adaptation library of Free\+RTOS.
 \begin{DoxyCompactList}\small\item\em Earliest-\/\+Deadline-\/\+First (EDF) scheduling policy managed by MST scheduler. \end{DoxyCompactList}\item 
 \#define \mbox{\hyperlink{_m_s_t_scheduler_8h_a6cefe977c72d7ed604361ef43e822a44}{mst\+\_\+sched\+SCHEDULING\+\_\+\+POLICY}}~\mbox{\hyperlink{_m_s_t_scheduler_8h_ab1e4dfd847a2b77cff70f52a11d43b99}{mst\+\_\+sched\+SCHEDULING\+\_\+\+RMS}}
 \begin{DoxyCompactList}\small\item\em Selected scheduling policy. \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{_m_s_t_scheduler_8h_aa07ee2f925db16beaf235590c336d015}{mst\+\_\+\+USE\+\_\+\+SPORADIC\+\_\+\+SERVER}}~1
+\begin{DoxyCompactList}\small\item\em Usage of sporadic server. \end{DoxyCompactList}\item 
 \#define \mbox{\hyperlink{_m_s_t_scheduler_8h_a8d32b5f74e55dfd12c5aa3415e16d75e}{config\+NUM\+\_\+\+THREAD\+\_\+\+LOCAL\+\_\+\+STORAGE\+\_\+\+POINTERS}}~3
 \begin{DoxyCompactList}\small\item\em Number of thread-\/local storage pointers. \end{DoxyCompactList}\item 
 \Hypertarget{_m_s_t_scheduler_8h_ab1c45ea62248c332df47b9b858586ab3}\label{_m_s_t_scheduler_8h_ab1c45ea62248c332df47b9b858586ab3} 
 \#define {\bfseries TESTING\+\_\+\+STM32}~1
-\begin{DoxyCompactList}\small\item\em Macro indicating STM32 testing environment. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Macro indicating STM32 testing environment. \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{_m_s_t_scheduler_8h_a795e545979bdaa7a589a4d3a88b1000e}{NOTIFY\+\_\+\+INTERARRIVAL\+\_\+\+TIMER}}~(1 $<$$<$ 0)
+\begin{DoxyCompactList}\small\item\em Includes the HAL library for STM32\+F4 boards. \end{DoxyCompactList}\item 
+\Hypertarget{_m_s_t_scheduler_8h_a1af064ca07ad7c8bf848949de674f870}\label{_m_s_t_scheduler_8h_a1af064ca07ad7c8bf848949de674f870} 
+\#define {\bfseries NOTIFY\+\_\+\+USER\+\_\+\+REQUEST}~(1 $<$$<$ 1)
+\end{DoxyCompactItemize}
 \doxysubsubsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
 void \mbox{\hyperlink{_m_s_t_scheduler_8h_aa1da0320aadb954f0b613dde3b26d82a}{v\+MSTScheduler\+Init}} (void)
-\begin{DoxyCompactList}\small\item\em Includes the HAL library for STM32\+F4 boards. \end{DoxyCompactList}\item 
+\begin{DoxyCompactList}\small\item\em Initializes the MST Scheduler. \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{_m_s_t_scheduler_8h_a492648b07031a66c57fb4bdd663fcd1b}{v\+MSTScheduler\+Start}} (void)
 \begin{DoxyCompactList}\small\item\em Starts the MST Scheduler. \end{DoxyCompactList}\item 
 Task\+Handle\+\_\+t \mbox{\hyperlink{_m_s_t_scheduler_8h_a0cac2b331abbc97d11dcf768a5f1f677}{v\+MSTPeriodic\+Task\+Create}} (Task\+Function\+\_\+t pv\+Job\+Code, const char \texorpdfstring{$\ast$}{*}const pc\+Name, uint16\+\_\+t us\+Stack\+Depth, void \texorpdfstring{$\ast$}{*}pv\+Parameters, UBase\+Type\+\_\+t ux\+Priority, Task\+Handle\+\_\+t \texorpdfstring{$\ast$}{*}px\+Created\+Task, Tick\+Type\+\_\+t x\+Task\+Period, Tick\+Type\+\_\+t x\+Task\+Deadline, Tick\+Type\+\_\+t x\+Task\+Phase, Tick\+Type\+\_\+t x\+Task\+WCET)
@@ -55,7 +63,7 @@ Enrico Alberti
 \begin{DoxyDate}{Date}
 2024 
 \end{DoxyDate}
-This file contains definitions and function prototypes for the Model-\/\+Specific Task (MST) scheduler library, which extends Free\+RTOS to include additional scheduling policies and support for periodic and sporadic tasks. 
+This file contains definitions and function prototypes for the Modello STandard (MST) scheduler library, which extends Free\+RTOS. 
 
 \doxysubsection{Macro Definition Documentation}
 \Hypertarget{_m_s_t_scheduler_8h_a8d32b5f74e55dfd12c5aa3415e16d75e}\index{MSTScheduler.h@{MSTScheduler.h}!configNUM\_THREAD\_LOCAL\_STORAGE\_POINTERS@{configNUM\_THREAD\_LOCAL\_STORAGE\_POINTERS}}
@@ -91,8 +99,28 @@ Macro to select the technique for periodic task management.
 Options\+:
 \begin{DoxyItemize}
 \item 1\+: Using Free\+RTOS delays.
-\item 2\+: Using software timers. 
-\end{DoxyItemize}
+\item 2\+: Using software timers. Highly suggested 
+\end{DoxyItemize}\Hypertarget{_m_s_t_scheduler_8h_aa07ee2f925db16beaf235590c336d015}\index{MSTScheduler.h@{MSTScheduler.h}!mst\_USE\_SPORADIC\_SERVER@{mst\_USE\_SPORADIC\_SERVER}}
+\index{mst\_USE\_SPORADIC\_SERVER@{mst\_USE\_SPORADIC\_SERVER}!MSTScheduler.h@{MSTScheduler.h}}
+\doxysubsubsection{\texorpdfstring{mst\_USE\_SPORADIC\_SERVER}{mst\_USE\_SPORADIC\_SERVER}}
+{\footnotesize\ttfamily \label{_m_s_t_scheduler_8h_aa07ee2f925db16beaf235590c336d015} 
+\#define mst\+\_\+\+USE\+\_\+\+SPORADIC\+\_\+\+SERVER~1}
+
+
+
+Usage of sporadic server. 
+
+If not selected sporadic tasks will be served without the usage of server This will mean that sporadics are ran with user-\/set priority The sporadic server is used only in case of static scheduling (e.\+g. RMS) \Hypertarget{_m_s_t_scheduler_8h_a795e545979bdaa7a589a4d3a88b1000e}\index{MSTScheduler.h@{MSTScheduler.h}!NOTIFY\_INTERARRIVAL\_TIMER@{NOTIFY\_INTERARRIVAL\_TIMER}}
+\index{NOTIFY\_INTERARRIVAL\_TIMER@{NOTIFY\_INTERARRIVAL\_TIMER}!MSTScheduler.h@{MSTScheduler.h}}
+\doxysubsubsection{\texorpdfstring{NOTIFY\_INTERARRIVAL\_TIMER}{NOTIFY\_INTERARRIVAL\_TIMER}}
+{\footnotesize\ttfamily \label{_m_s_t_scheduler_8h_a795e545979bdaa7a589a4d3a88b1000e} 
+\#define NOTIFY\+\_\+\+INTERARRIVAL\+\_\+\+TIMER~(1 $<$$<$ 0)}
+
+
+
+Includes the HAL library for STM32\+F4 boards. 
+
+Modify this include for specific STM32 board support. 
 
 \doxysubsection{Function Documentation}
 \Hypertarget{_m_s_t_scheduler_8h_a0cac2b331abbc97d11dcf768a5f1f677}\index{MSTScheduler.h@{MSTScheduler.h}!vMSTPeriodicTaskCreate@{vMSTPeriodicTaskCreate}}
@@ -141,13 +169,9 @@ void v\+MSTScheduler\+Init (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyPa
 
 
 
-Includes the HAL library for STM32\+F4 boards. 
+Initializes the MST Scheduler. 
 
-Modify this include for specific STM32 board support.
-
-Initializes the MST Scheduler.
-
-This function sets up the MST scheduler, preparing it to manage tasks based on the selected scheduling policy. \Hypertarget{_m_s_t_scheduler_8h_a492648b07031a66c57fb4bdd663fcd1b}\index{MSTScheduler.h@{MSTScheduler.h}!vMSTSchedulerStart@{vMSTSchedulerStart}}
+This function sets up the MST scheduler, preparing it to manage tasks based on the selected scheduling policy. When using MST call this and not "{}v\+Task\+Start\+Scheduler();"{} \Hypertarget{_m_s_t_scheduler_8h_a492648b07031a66c57fb4bdd663fcd1b}\index{MSTScheduler.h@{MSTScheduler.h}!vMSTSchedulerStart@{vMSTSchedulerStart}}
 \index{vMSTSchedulerStart@{vMSTSchedulerStart}!MSTScheduler.h@{MSTScheduler.h}}
 \doxysubsubsection{\texorpdfstring{vMSTSchedulerStart()}{vMSTSchedulerStart()}}
 {\footnotesize\ttfamily \label{_m_s_t_scheduler_8h_a492648b07031a66c57fb4bdd663fcd1b} 
@@ -179,7 +203,7 @@ Adds standard model parameters to handle sporadic tasks in addition to the param
 \hline
 {\em pv\+Parameters} & Parameters passed into the job. \\
 \hline
-{\em ux\+Priority} & Priority of the job (not used if MST-\/specific scheduling is used). \\
+{\em ux\+Priority} & Priority of the job (only used if mst\+\_\+sched\+SCHEDULING\+\_\+\+POLICY mst\+\_\+sched\+SCHEDULING\+\_\+\+DEFAULT). \\
 \hline
 {\em px\+Created\+Task} & Pointer to the job handle. \\
 \hline

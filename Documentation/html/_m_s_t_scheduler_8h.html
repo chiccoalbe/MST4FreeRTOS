@@ -97,6 +97,7 @@ $(function(){ initResizable(false); });
 <code>#include &quot;task.h&quot;</code><br />
 <code>#include &quot;list.h&quot;</code><br />
 <code>#include &quot;timers.h&quot;</code><br />
+<code>#include &quot;stdbool.h&quot;</code><br />
 <code>#include &quot;stm32f4xx_hal.h&quot;</code><br />
 </div>
 <p><a href="_m_s_t_scheduler_8h_source.html">Go to the source code of this file.</a></p>
@@ -121,6 +122,9 @@ Macros</h2></td></tr>
 <tr class="memitem:a6cefe977c72d7ed604361ef43e822a44" id="r_a6cefe977c72d7ed604361ef43e822a44"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6cefe977c72d7ed604361ef43e822a44">mst_schedSCHEDULING_POLICY</a>&#160;&#160;&#160;<a class="el" href="#ab1e4dfd847a2b77cff70f52a11d43b99">mst_schedSCHEDULING_RMS</a></td></tr>
 <tr class="memdesc:a6cefe977c72d7ed604361ef43e822a44"><td class="mdescLeft">&#160;</td><td class="mdescRight">Selected scheduling policy.  <br /></td></tr>
 <tr class="separator:a6cefe977c72d7ed604361ef43e822a44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa07ee2f925db16beaf235590c336d015" id="r_aa07ee2f925db16beaf235590c336d015"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa07ee2f925db16beaf235590c336d015">mst_USE_SPORADIC_SERVER</a>&#160;&#160;&#160;1</td></tr>
+<tr class="memdesc:aa07ee2f925db16beaf235590c336d015"><td class="mdescLeft">&#160;</td><td class="mdescRight">Usage of sporadic server.  <br /></td></tr>
+<tr class="separator:aa07ee2f925db16beaf235590c336d015"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8d32b5f74e55dfd12c5aa3415e16d75e" id="r_a8d32b5f74e55dfd12c5aa3415e16d75e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8d32b5f74e55dfd12c5aa3415e16d75e">configNUM_THREAD_LOCAL_STORAGE_POINTERS</a>&#160;&#160;&#160;3</td></tr>
 <tr class="memdesc:a8d32b5f74e55dfd12c5aa3415e16d75e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of thread-local storage pointers.  <br /></td></tr>
 <tr class="separator:a8d32b5f74e55dfd12c5aa3415e16d75e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -128,11 +132,17 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>TESTING_STM32</b>&#160;&#160;&#160;1</td></tr>
 <tr class="memdesc:ab1c45ea62248c332df47b9b858586ab3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Macro indicating STM32 testing environment. <br /></td></tr>
 <tr class="separator:ab1c45ea62248c332df47b9b858586ab3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a795e545979bdaa7a589a4d3a88b1000e" id="r_a795e545979bdaa7a589a4d3a88b1000e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a795e545979bdaa7a589a4d3a88b1000e">NOTIFY_INTERARRIVAL_TIMER</a>&#160;&#160;&#160;(1 &lt;&lt; 0)</td></tr>
+<tr class="memdesc:a795e545979bdaa7a589a4d3a88b1000e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Includes the HAL library for STM32F4 boards.  <br /></td></tr>
+<tr class="separator:a795e545979bdaa7a589a4d3a88b1000e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1af064ca07ad7c8bf848949de674f870" id="r_a1af064ca07ad7c8bf848949de674f870"><td class="memItemLeft" align="right" valign="top"><a id="a1af064ca07ad7c8bf848949de674f870" name="a1af064ca07ad7c8bf848949de674f870"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>NOTIFY_USER_REQUEST</b>&#160;&#160;&#160;(1 &lt;&lt; 1)</td></tr>
+<tr class="separator:a1af064ca07ad7c8bf848949de674f870"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:aa1da0320aadb954f0b613dde3b26d82a" id="r_aa1da0320aadb954f0b613dde3b26d82a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa1da0320aadb954f0b613dde3b26d82a">vMSTSchedulerInit</a> (void)</td></tr>
-<tr class="memdesc:aa1da0320aadb954f0b613dde3b26d82a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Includes the HAL library for STM32F4 boards.  <br /></td></tr>
+<tr class="memdesc:aa1da0320aadb954f0b613dde3b26d82a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializes the MST Scheduler.  <br /></td></tr>
 <tr class="separator:aa1da0320aadb954f0b613dde3b26d82a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a492648b07031a66c57fb4bdd663fcd1b" id="r_a492648b07031a66c57fb4bdd663fcd1b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a492648b07031a66c57fb4bdd663fcd1b">vMSTSchedulerStart</a> (void)</td></tr>
 <tr class="memdesc:a492648b07031a66c57fb4bdd663fcd1b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Starts the MST Scheduler.  <br /></td></tr>
@@ -151,7 +161,7 @@ Functions</h2></td></tr>
 <div class="textblock"><p>Header file for the standard model adaptation library of FreeRTOS. </p>
 <dl class="section author"><dt>Author</dt><dd>Enrico Alberti </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2024 </dd></dl>
-<p>This file contains definitions and function prototypes for the Model-Specific Task (MST) scheduler library, which extends FreeRTOS to include additional scheduling policies and support for periodic and sporadic tasks. </p>
+<p>This file contains definitions and function prototypes for the Modello STandard (MST) scheduler library, which extends FreeRTOS. </p>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
 <a id="a8d32b5f74e55dfd12c5aa3415e16d75e" name="a8d32b5f74e55dfd12c5aa3415e16d75e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8d32b5f74e55dfd12c5aa3415e16d75e">&#9670;&#160;</a></span>configNUM_THREAD_LOCAL_STORAGE_POINTERS</h2>
@@ -202,8 +212,42 @@ Functions</h2></td></tr>
 <p>Macro to select the technique for periodic task management. </p>
 <p>Options:</p><ul>
 <li>1: Using FreeRTOS delays.</li>
-<li>2: Using software timers. </li>
+<li>2: Using software timers. Highly suggested </li>
 </ul>
+
+</div>
+</div>
+<a id="aa07ee2f925db16beaf235590c336d015" name="aa07ee2f925db16beaf235590c336d015"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa07ee2f925db16beaf235590c336d015">&#9670;&#160;</a></span>mst_USE_SPORADIC_SERVER</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define mst_USE_SPORADIC_SERVER&#160;&#160;&#160;1</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Usage of sporadic server. </p>
+<p>If not selected sporadic tasks will be served without the usage of server This will mean that sporadics are ran with user-set priority The sporadic server is used only in case of static scheduling (e.g. RMS) </p>
+
+</div>
+</div>
+<a id="a795e545979bdaa7a589a4d3a88b1000e" name="a795e545979bdaa7a589a4d3a88b1000e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a795e545979bdaa7a589a4d3a88b1000e">&#9670;&#160;</a></span>NOTIFY_INTERARRIVAL_TIMER</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define NOTIFY_INTERARRIVAL_TIMER&#160;&#160;&#160;(1 &lt;&lt; 0)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Includes the HAL library for STM32F4 boards. </p>
+<p>Modify this include for specific STM32 board support. </p>
 
 </div>
 </div>
@@ -303,10 +347,8 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Includes the HAL library for STM32F4 boards. </p>
-<p>Modify this include for specific STM32 board support.</p>
-<p>Initializes the MST Scheduler.</p>
-<p>This function sets up the MST scheduler, preparing it to manage tasks based on the selected scheduling policy. </p>
+<p>Initializes the MST Scheduler. </p>
+<p>This function sets up the MST scheduler, preparing it to manage tasks based on the selected scheduling policy. When using MST call this and not "vTaskStartScheduler();" </p>
 
 </div>
 </div>
@@ -392,7 +434,7 @@ Functions</h2></td></tr>
     <tr><td class="paramname">pcName</td><td>Descriptive name for the job. </td></tr>
     <tr><td class="paramname">usStackDepth</td><td>Length of the stack for this task, expressed in words. </td></tr>
     <tr><td class="paramname">pvParameters</td><td>Parameters passed into the job. </td></tr>
-    <tr><td class="paramname">uxPriority</td><td>Priority of the job (not used if MST-specific scheduling is used). </td></tr>
+    <tr><td class="paramname">uxPriority</td><td>Priority of the job (only used if mst_schedSCHEDULING_POLICY mst_schedSCHEDULING_DEFAULT). </td></tr>
     <tr><td class="paramname">pxCreatedTask</td><td>Pointer to the job handle. </td></tr>
     <tr><td class="paramname">xTaskInterarrivalTime</td><td>Minimum spacing between releases in milliseconds. </td></tr>
     <tr><td class="paramname">xTaskDeadline</td><td>Relative deadline of the task in milliseconds. </td></tr>

@@ -59,16 +59,24 @@
  * 
  * Default is RMS scheduling policy.
  */
-#define mst_schedSCHEDULING_POLICY mst_schedSCHEDULING_RMS
+#define mst_schedSCHEDULING_POLICY mst_schedSCHEDULING_EDF
 
 
 /**
- * @bried Usage of sporadic server
+ * @brief Usage of sporadic server
+ * 
  * If not selected sporadic tasks will be served without the usage of server
  * This will mean that sporadics are ran with user-set priority
  * The sporadic server is used only in case of static scheduling (e.g. RMS)
  */
 #define mst_USE_SPORADIC_SERVER 1
+
+/**
+ * @brief Stack to be assigned to sporadic server 
+ * 
+ * Default: minimal stack size
+ */
+#define mst_SPORADIC_SERVER_STACK_SIZE configMINIMAL_STACK_SIZE
 
 
 #ifndef configNUM_THREAD_LOCAL_STORAGE_POINTERS

@@ -5,7 +5,8 @@ var searchData=
   ['mst_5fschedscheduling_5fpolicy_2',['mst_schedSCHEDULING_POLICY',['../_m_s_t_scheduler_8h.html#a6cefe977c72d7ed604361ef43e822a44',1,'MSTScheduler.h']]],
   ['mst_5fschedscheduling_5frms_3',['mst_schedSCHEDULING_RMS',['../_m_s_t_scheduler_8h.html#ab1e4dfd847a2b77cff70f52a11d43b99',1,'MSTScheduler.h']]],
   ['mst_5ftest_5fperiodic_5fmethod_4',['mst_test_PERIODIC_METHOD',['../_m_s_t_scheduler_8h.html#ab3716d48b08f5c9e9bd532b1f52bb368',1,'MSTScheduler.h']]],
-  ['mstextendedtcb_5',['MSTextendedTCB',['../struct_m_s_textended_t_c_b.html',1,'']]],
-  ['mstscheduler_2eh_6',['MSTScheduler.h',['../_m_s_t_scheduler_8h.html',1,'']]],
-  ['my_20personal_20index_20page_7',['My Personal Index Page',['../index.html',1,'']]]
+  ['mst_5fuse_5fsporadic_5fserver_5',['mst_USE_SPORADIC_SERVER',['../_m_s_t_scheduler_8h.html#aa07ee2f925db16beaf235590c336d015',1,'MSTScheduler.h']]],
+  ['mstextendedtcb_6',['MSTextendedTCB',['../struct_m_s_textended_t_c_b.html',1,'']]],
+  ['mstscheduler_2eh_7',['MSTScheduler.h',['../_m_s_t_scheduler_8h.html',1,'']]],
+  ['my_20personal_20index_20page_8',['My Personal Index Page',['../index.html',1,'']]]
 ];

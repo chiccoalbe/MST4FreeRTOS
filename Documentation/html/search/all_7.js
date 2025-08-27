@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['step_201_3a_20opening_20the_20box_0',['Step 1: Opening the box',['../index.html#step1',1,'']]]
+  ['page_0',['My Personal Index Page',['../index.html',1,'']]],
+  ['personal_20index_20page_1',['My Personal Index Page',['../index.html',1,'']]]
 ];

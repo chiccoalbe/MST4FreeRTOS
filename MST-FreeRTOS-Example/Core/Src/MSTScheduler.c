@@ -13,11 +13,6 @@
  */
 static float prvMSTSetupUSClock() {
 	//set prescaler equal to MHz of clock
-	/*__HAL_RCC_TIM2_CLK_ENABLE();
-	 tstMSTTimerReferenceFromUser->PSC = (HAL_RCC_GetPCLK1Freq() / 1000000 - 1);
-	 RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
-	 tstMSTTimerReferenceFromUser->ARR = 0xFFFFFFFF;
-	 tstMSTTimerReferenceFromUser->CR1 |= TIM_CR1_CEN;*/
 	//we have that f_step = 1Mhz and Tstep = 1us, this way we can count us
 	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
 	DWT->CYCCNT = 0;
@@ -25,10 +20,6 @@ static float prvMSTSetupUSClock() {
 }
 
 static uint32_t prvMSTGetUS() {
-	/*uint32_t out = tstMSTTimerReferenceFromUser->CNT;
-	 BaseType_t clckFreq = HAL_RCC_GetPCLK1Freq();
-	 BaseType_t countFreq = clckFreq / (tstMSTTimerReferenceFromUser->PSC + 1);
-	 float timing = 1.0 / (float) countFreq;*/
 	uint32_t outUS = (DWT->CYCCNT / (24));
 	return outUS;
 }
@@ -40,16 +31,21 @@ typedef enum taskType_e {
 }taskType_e;
 
 
-static void prvMSTPeriodicGenericJob(void *pvParameters);
-static void prvMSTSporadicGenericJob(void *pvParameters);
-static void prvMSTDispatch(TaskHandle_t *forTask, BaseType_t xAsCallee,
-		taskType_e xOfTaskType, BaseType_t xFromUserRequest);
+static void prvMSTPeriodicGenericJob(void *);
+static void prvMSTSporadicGenericJob(void *);
+static void prvMSTDispatch(TaskHandle_t *, BaseType_t,
+		taskType_e , BaseType_t );
 
 #if(mst_test_PERIODIC_METHOD == 2)
-static void prvMSTPeriodicTimerCallback(TimerHandle_t xTimer);
+static void prvMSTPeriodicTimerCallback(TimerHandle_t );
 #endif
 
-static void prvMSTSporadicTimerCallback(TimerHandle_t xTimer);
+#if(mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF)
+static BaseType_t prvAsmissionControlEDF(extTCB_t *);
+float prvPeriodicTasksDensity = 0;
+#endif
+
+static void prvMSTSporadicTimerCallback(TimerHandle_t );
 
 #if (mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS || mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF) 
 static BaseType_t vTasksListInit = pdFALSE;
@@ -82,6 +78,11 @@ void* pvTaskGetThreadLocalStoragePointer(TaskHandle_t xTaskToQuery,
  */
 #define mstLOCAL_STORAGE_DATA_INDEX 0
 
+#if (mst_USE_SPORADIC_SERVER == 1 && mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS)
+static TaskHandle_t SporadicServerHandle;
+static void prvMSTSporadicServerJob(void *pvParameters)
+#endif
+
 /*-----------------------------------------------------------*/
 
 
@@ -89,6 +90,8 @@ void* pvTaskGetThreadLocalStoragePointer(TaskHandle_t xTaskToQuery,
  * Task control block.  A task control block (TCB) is allocated for each task,
  * and stores task state information, including a pointer to the task's context
  * (the task's run time environment, including register values)
+ * MST4FreeRTOS extends the original TCB, which is still present.
+ * The extended TCB is kept in local thread memory for each thread
  */
 typedef struct MSTextendedTCB {
 	//standard from FreeRTOS scheduler
@@ -140,9 +143,35 @@ typedef struct MSTextendedTCB {
 	BaseType_t xInterarrivalTimerRunning;
 	BaseType_t xJobCalled;
 
+	/*
+	For periodic server
+	TODO: Might be better to put own tcb for sporadic server
+	TickType_t xBaseBudget;
+	TickType_t xCurrentBudget;
+	*/
+
 } extTCB_t;
 
 static BaseType_t prvPeriodicTaskCreate(extTCB_t *xFromTCB) {
+	if(xFromTCB->pxCreatedTask == &SporadicServerHandle){
+		/*
+		The periodic task passed is the sporadic server, it shall not
+		pass the prvMSTPeriodicGenericJob but the prvMSTSporadicServerJob
+		*/
+	if (xTaskCreate(prvMSTSporadicServerJob, xFromTCB->pcName,
+			xFromTCB->usStackDepth, xFromTCB->pvParameters,
+			xFromTCB->uxPriority, xFromTCB->pxCreatedTask) == pdPASS) {
+				/*
+				No need for timer since called by aperiodic/sporadic task
+				*/
+				return pdPASS;
+			}else {
+		return pdFAIL;
+	}
+	}else{
+		/*
+		Generic periodic task
+		*/
 	if (xTaskCreate(prvMSTPeriodicGenericJob, xFromTCB->pcName,
 			xFromTCB->usStackDepth, xFromTCB->pvParameters,
 			xFromTCB->uxPriority, xFromTCB->pxCreatedTask) == pdPASS) {
@@ -164,6 +193,7 @@ static BaseType_t prvPeriodicTaskCreate(extTCB_t *xFromTCB) {
 	} else {
 		return pdFAIL;
 	}
+}
 }
 
 TaskHandle_t vMSTPeriodicTaskCreate(TaskFunction_t pvJobCode,
@@ -195,6 +225,10 @@ TaskHandle_t vMSTPeriodicTaskCreate(TaskFunction_t pvJobCode,
 					.xTaskInitDone = pdFALSE, .uNumOfMissedDeadlines = 0 };
 
 #if (mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS)
+	/*
+	If RMS we fill a list containg all the declared tasks by the user before kernel init.
+	They will be reordered and properly set-up as the kernel start is called
+	*/
 	if (vTasksListInit == pdFALSE) {
 		vTasksListInit = pdTRUE;
 		vListInitialise(&xTasksList);
@@ -222,7 +256,9 @@ TaskHandle_t vMSTPeriodicTaskCreate(TaskFunction_t pvJobCode,
 /**
  * @brief This represents a generic periodic task:
  * Every task has its own data in the extendedTCB to manage timings
- * This version uses delays
+ * It uses 2 possible methods to handle periodic jobs:
+ * mst_test_PERIODIC_METHOD 1: Calls a simple delay
+ * mst_test_PERIODIC_METHOD 2: Uses FreeRTOS global timers to callback the task appropriately.
  *
  * @param pvParameters
  */
@@ -359,6 +395,7 @@ static void prvMSTSporadicTimerCallback(TimerHandle_t xTimer) {
 
 #endif   /* #if(mst_test_PERIODIC_METHOD == 2) */
 
+static TickType_t prvXMaxInterrarrivalTime = 0;
 BaseType_t vMSTSporadicTaskCreate(TaskFunction_t pvJobCode, const char *pcName,
 		uint16_t usStackDepth, void *pvParameters, UBaseType_t uxPriority,
 		TaskHandle_t *pxCreatedTask,
@@ -380,7 +417,7 @@ BaseType_t vMSTSporadicTaskCreate(TaskFunction_t pvJobCode, const char *pcName,
 						.xTaskInterarrivalTime = xTaskInterarrivalTime,
 						.xJobCalled = pdFALSE, .xInterarrivalTimerRunning =
 						pdFALSE };
-
+		prvXMaxInterrarrivalTimer = (xTaskInterarrivalTime > prvXMaxInterrarrivalTime) ? xTaskInterarrivalTime : prvXMaxInterrarrivalTimer;
 		/*
 		 We create the task and allocate, but we do not clear the mutex nor start the timer
 		 */
@@ -394,7 +431,10 @@ BaseType_t vMSTSporadicTaskCreate(TaskFunction_t pvJobCode, const char *pcName,
 }
 
 /**
- * @brief
+ * @brief This represents the generic sporadic job handler.
+ * This thread waits for notifications from either
+ * - User direct call of sporadic task
+ * - Interarrival timer unlocks previously called job
  *
  * @param pvParameters
  */
@@ -445,12 +485,19 @@ static void prvMSTSporadicGenericJob(void *pvParameters) {
 		xCurrExtTCB->xJobCalled = pdFALSE;
 		taskEXIT_CRITICAL();
 
+		BaseType_t actualCPUCycles = xCurrExtTCB->ulRunTimeCounter;
 		xCurrExtTCB->xPrevStartTime = xTaskGetTickCount();
 		xCurrExtTCB->pvJobCode(pvParameters);
 		/*
 		 If periodic job is called within the task itself its no problem since the timer is going
 		 */
 		xCurrExtTCB->xPrevFinishTime = xTaskGetTickCount();
+		/*
+		The user shall have set up runtime stats appropriately:
+		1 tick->1us, hence 'actualCPUCycles' is in us
+		*/
+		actualCPUCycles = xCurrExtTCB->ulRunTimeCounter - actualCPUCycles;
+		
 		xCurrExtTCB->xPrevExecTime = xCurrExtTCB->xPrevFinishTime
 				- xCurrExtTCB->xPrevStartTime;
 
@@ -465,8 +512,7 @@ static void prvMSTSporadicGenericJob(void *pvParameters) {
 
 BaseType_t vMSTSporadicTaskRun(TaskHandle_t *pxTaskToRunHandle) {
 	/*
-	 We check if the task has been created, one way of doing this is by seeing if the TCB is ok
-	 maybe there are other better ways
+	 We check if the task has been created. To run the sporadic task we call a dispatch
 	 */
 	extTCB_t *xCurrExtTCB = (extTCB_t*) pvTaskGetThreadLocalStoragePointer(
 			*pxTaskToRunHandle, mstLOCAL_STORAGE_DATA_INDEX);
@@ -474,7 +520,7 @@ BaseType_t vMSTSporadicTaskRun(TaskHandle_t *pxTaskToRunHandle) {
 	if (xCurrExtTCB == NULL) {
 		return pdFAIL;
 	} else {
-		prvMSTDispatch(pxTaskToRunHandle, true, taskTypeSporadic, true);
+		prvMSTDispatch(pxTaskToRunHandle, pdTRUE, taskTypeSporadic, pdTRUE);
 		return pdPASS;
 	}
 }
@@ -490,17 +536,122 @@ static int prv_compare(const void *arg1, const void *arg2) {
 		return -1;
 	if (itm1->xTaskPeriod < itm2->xTaskPeriod)
 		return 1;
-	return 0; // Equal
+	return 0; 
 #elif mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF
 	if (itm1->xTaskDeadline < itm2->xTaskDeadline)
 		return -1;
 	if (itm1->xTaskDeadline > itm2->xTaskDeadline)
 		return 1;
-	return 0; // Equal
+	return 0; 
 #endif
 
+}
+
+static void prvComputeSporadicServerProprierties(TickType_t &tSS_Period, TickType_t &tSS_WCET){
+	/*
+	Rationale:
+	We want to have a sporadic server that has appropriate period and WCET considering the context
+	of other periodic tasks.
+	For Liu-Layland 1973 we have an optimal utilization bound:
+	U = m(2^(1/m) - 1) with 'n' being the number of periodic tasks
+	If we have n periodic tasks + the sporadic server we have m = n + 1 total periodic tasks 
+	(we consider case where sporadic server runs at each period).
+	Considering Css as WCET for the sporadic server and Tss as its period.
+	We then have, considering U = C/T:
+	U = sum(U_p) + C_ss/T_ss = sum(U_p) + U_ss
+	-> U_ss = m(2^(1/m) - 1) - sum(U_p) 
+	With this we get an ideal U_ss, if we find a good value for C_ss (WCET) we can get an ideal period:
+
+	Lets declare a min and max WCET for the ss:
+	- min: maximum WCET of all periodic tasks
+	- max: sum of all WCET of all periodic tasks
+
+	At the same time we want the period Tss to be lower or equal to the minimum interarrival
+	time of all sporadics:
+
+	So we can evaluate:
+	T_ss = C_ss_i/U_ss
+
+	So here we try every possibility from max C_ss to min C_ss
+	*/
+	BaseType_t m = xTasksList.uxNumberOfItems + 1;
+	BaseType_t U = m(2^(1/m) - 1);
+	TickType_t min_css = 0;
+	TickType_t max_css = 0;
+	TickType_t sum_up = 0; //
+	ListItem_t *xItm = listGET_HEAD_ENTRY(&xTasksList); // this is xListEnd.pxNext
+	for (int i = 0; i < xListTasksNumber; i++) {
+	    extTCB_t *xTCB = (extTCB_t *) xItm->pvOwner;
+	    configASSERT(xTCB != NULL);  // Make sure we don't dereference garbage
+		TickType_t t_wcet = xTCB->xTaskWCET;
+		TickType_t t_per = xTCB->xTaskPeriod;
+		if(t_wcet > min_css){
+			min_css = t_wcet;
+		}
+		max_css += t_wcet;
+		configASSERT(t_per > 0);
+		sum_up += (t_wcet/t_per);
+	    xItm = listGET_NEXT(xItm);
+	}
+	TickType_t Css = max_css;
+	TickType_t Uss = U - sum_up;
+	TickType_t Tss = 0;
+	while(Css >= min_css ){
+		configASSERT(Css > 0);
+		Tss = Css/Uss;
+		if(Tss > prvXMaxInterrarrivalTimer){
+			//not ok tss, keep going
+			Css -= 1;
+		}else{
+			//ok tss
+			break;
+		}
+	}
+	*tSS_Period = Tss;
+	*tSS_WCET = Css;
+}
+
+
+#if (mst_USE_SPORADIC_SERVER == 1 && mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS)
+static BaseType_t prvAsmissionControlSporadicServer(extTCB_t forTCB){
 
 }
+#endif
+
+/*
+This is the sporadic server Job, has the responsibility of:
+- Run acceptance on sporadic jobs
+- Run sporadic jobs
+- Keep track of budget
+- Replenish
+
+It runs when called from sporadic jobs.
+When a sporadic job finishes the dispatcher notifies the server. If no running jobs the server stops
+and calculates the remaining budget. 
+
+After every sporadic run the sporadic server calculates the remaining budget, and plans a dedicated
+timer for replenishment.
+
+Replenishment rule: 
+If a task with period Tp uses budget 'n', a replenishment timer is set to start at Tp + n.
+
+Another timer is always active, it is a watchdog timer, its always updated and
+gets called when the budget is finished. When this happens the running task is suspended until
+next replenishment.
+
+Only 1 task at a time is ran.
+
+There is 1 data structure, kept at EDF order. The first in the list is the first to run.
+*/
+
+#if (mst_USE_SPORADIC_SERVER == 1 && mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS)
+static void prvMSTSporadicServerJob(void *pvParameters) {
+	for (;;) {
+
+	}
+}
+#endif
+
 /*
  *TODO: This can be obviously optimized by using an appropriate data structure
  Now it does quicksort after getting list, we have O(n log n) in best case
@@ -557,6 +708,16 @@ void vMSTSchedulerStart(void) {
 	 We go trough the created periodic tasks and change priority accordingly
 	 */
 #if mst_USE_SPORADIC_SERVER == 1
+/*
+We compute the sporadic servers WCET and Tss, how this is done is better explained in the function called
+*/
+	TickType_t tSS_Period;
+	TickType_t tSS_WCET;
+	prvComputeSporadicServerProprierties(&tSS_Period, &tSS_WCET);
+	/*
+	The sporadic server task is created like a normal "user-space" periodic task (priority is not relevant as recomputed later for RMS)
+	*/
+	vMSTPeriodicTaskCreate(prvSporadicServerTask, "SS", mst_SPORADIC_SERVER_STACK_SIZE, NULL, pdFALSE, SporadicServerHandle, tSS_Period, tSS_Period, 0, tSS_WCET);
 #endif
 	configASSERT(prvComputeOrderedPriorities());
 
@@ -566,19 +727,140 @@ void vMSTSchedulerStart(void) {
 
 }
 
+/**
+ * @brief This evaluates if a sporadic job can be admitted. The following rule is applied:
+ * For a sporadic job S(t,d,e) with:
+ * • t: current time
+ * • e: execution time (WCET)
+ * • d: deadline
+ * Let Il be the interval containing the deadline d of the new sporadic job S(t,d,e)
+ * Accept if e/(d-t) + delta_s_k <= 1 - delta , for all k=1, 2, ..., l
+ * where:
+ * • delta_s_k: density of all already active jobs in interval Ik
+ * • delta: density of periodic tasks, calculated at kernel start
+ * 
+ */
+
+
+ #if(mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF)
+
+//TODO: this can be very much optimized. The first two iterations can be put into one by 
+//calculating past densities at each step
+static BaseType_t prvAsmissionControlEDF(extTCB_t *forTCB){
+	/*
+	*Lets start by computing all the intervals for Ik
+	The EDF scheduler maintains a list of the jobs, in non-decreasing order of deadline (xTasksList)
+	We need to check te intervals up to the new jobs deadline and calculate the density
+	*/
+
+	/*
+	We start by calculating all intervals Ik and storing them
+	*/
+	 
+	TickType_t xPrev = 0;
+	TickType_t intervalsArray[xListTasksNumber+1];
+	TickType_t intervalsStarts[xListTasksNumber+1];
+	BaseType_t numOfIntervals;
+	TickType_t now = xTaskGetTickCount();
+	TickType_t xNewJobAbsDeadline = now + forTCB->xTaskDeadline;
+	TickType_t xTaskAbsDeadline = 0;
+
+		ListItem_t *xItm = listGET_HEAD_ENTRY(&xTasksList); // this is xListEnd.pxNext
+		for (int i = 0; i < xListTasksNumber; i++) {
+			extTCB_t *xTCB = (extTCB_t *) xItm->pvOwner;
+			xTaskAbsDeadline = xTCB->xPrevStartTime + TCB->xTaskDeadline;
+			TickType_t xDval = xTaskAbsDeadline - now;
+			if(xDval < xNewJobAbsDeadline){
+				//calculate d-t for certain delta
+				intervalsArray[i] = xDval - xPrev;
+				intervalsStarts[i] = xPrev;
+				xPrev = xDval;
+				numOfIntervals++;
+			}else{
+				//calculate last interval density with new job deadline
+				intervalsArray[i] = xNewJobAbsDeadline - xPrev;
+				intervalsStarts[i] = xPrev;
+				numOfIntervals++;
+				break;
+			}
+			configASSERT(xTCB != NULL);  
+			
+			xItm = listGET_NEXT(xItm);
+
+		}
+
+	/*
+	Now we calculate the density of each interval (fixed interval, all current tasks)
+	When iterating, the task shall add to the density only if its interval overlaps, hence,
+	only if its absolute deadline is higher than the interval start
+	*/
+
+	float densitiesArray[numOfIntervals];
+	memset(densitiesArray, 0, sizeof(densitiesArray));
+
+	ListItem_t *xItm = listGET_HEAD_ENTRY(&xTasksList); // this is xListEnd.pxNext
+		for (int i = 0; i < xListTasksNumber; i++) {
+			extTCB_t *xTCB = (extTCB_t *) xItm->pvOwner;
+			xTaskAbsDeadline = xTCB->xPrevStartTime + TCB->xTaskDeadline;
+			for(int j = 0; j < numOfIntervals; j++){
+				if(xTaskAbsDeadline >= intervalsStarts[j]){
+					//to consider for the density
+					densitiesArray[j] += ((float)(xTCB->xTaskWCET))/intervalsArray[j];
+				}else{
+					//not to be considered also for next intervals
+					break;
+				}
+			}
+			configASSERT(xTCB != NULL);  
+			
+			xItm = listGET_NEXT(xItm);
+
+		}
+
+	/*
+	At this point all densities have been computed, we can run the acceptances
+	*/
+	for(int i = 0; i <numOfIntervals; i++ ){
+		if (((float)forTCB->xTaskWCET / (xNewJobAbsDeadline - now)) 
+		+ densitiesArray[i] > 1.0f - prvPeriodicTasksDensity){
+				//not accepted
+				return pdFALSE;
+			}
+	}
+	return pdTRUE;
+}
+#endif
+
+/**
+ * @brief The dispatch is used to manage the execution of all possible tasks
+ * taking into consideration the type of both the task and the global scheduling chosen
+ * 
+ * @param forTask the handle of the task to run
+ * @param xAsCallee if true it is called from a request to run. If false it is from a task that finished running
+ * @param xOfTaskType the task can be periodic or sporadic
+ * @param xFromUserRequest used for sporadic tasks. If true the user called the task to run. If false the interarrival timer asked to run the task
+ */
 
 static void prvMSTDispatch(TaskHandle_t *forTask, BaseType_t xAsCallee,
 		taskType_e xOfTaskType, BaseType_t xFromUserRequest) {
 
 	if (xAsCallee == pdTRUE) {
 #if mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF
-		/*
-		A job wants to run, we add it to list and recompute priorities
-		*/
 
 		extTCB_t *xCurrExtTCB = (extTCB_t*) pvTaskGetThreadLocalStoragePointer(
 	                            *forTask, mstLOCAL_STORAGE_DATA_INDEX);
 
+		/*
+		We run admission control
+		*/
+		if(!prvAsmissionControlEDF(xCurrExtTCB)){
+			//There should be a way to notify user of rejection here!
+			return;
+		}
+		/*
+		A job is accepted, we add it to list and recompute priorities
+		*/
+		
 		taskENTER_CRITICAL();
 		{
 		    if (vTasksListInit == pdFALSE) {
@@ -605,6 +887,7 @@ static void prvMSTDispatch(TaskHandle_t *forTask, BaseType_t xAsCallee,
 #endif
 		switch (xOfTaskType) {
 		case taskTypePeriodic:
+			//run the periodic task by unlocking the semaphore
 			xTaskNotifyGive(*forTask);
 			break;
 		case taskTypeSporadic:
