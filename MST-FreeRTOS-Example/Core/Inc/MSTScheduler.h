@@ -60,7 +60,7 @@
  * 
  * Default is RMS scheduling policy.
  */
-#define mst_schedSCHEDULING_POLICY mst_schedSCHEDULING_EDF
+#define mst_schedSCHEDULING_POLICY mst_schedSCHEDULING_RMS
 
 
 /**
@@ -104,8 +104,11 @@
 
 #endif
 
-#define NOTIFY_INTERARRIVAL_TIMER (1 << 0)
-#define NOTIFY_USER_REQUEST       (1 << 1)
+#define NOTIFY_INTERARRIVAL_TIMER   (1 << 0)
+#define NOTIFY_USER_REQUEST         (1 << 1)
+#define NOTIFY_SS_REQUEST           (1 << 2)
+#define NOTIFY_SS_REQUEST_DONE      (1 << 3)
+#define NOTIFY_SS_BUDGET_FINISHED   (1 << 4)
 
 /**
  * @brief Initializes the MST Scheduler.

@@ -78,7 +78,7 @@ void* pvTaskGetThreadLocalStoragePointer(TaskHandle_t xTaskToQuery,
 
 static TaskHandle_t SporadicServerHandle;
 #if (mst_USE_SPORADIC_SERVER == 1 && mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS)
-static void prvMSTSporadicServerJob(void *pvParameters)
+static void prvMSTSporadicServerJob(void *pvParameters);
 #endif
 
 /*-----------------------------------------------------------*/
@@ -201,6 +201,28 @@ static BaseType_t prvPeriodicTaskCreate(extTCB_t *xFromTCB) {
 }
 }
 
+/*
+Adds a certain item to the generic xTaskList
+*/
+static BaseType_t prvAddItemToxTasksList(extTCB_t *fromTCB, BaseType_t withValue){
+	if (vTasksListInit == pdFALSE) {
+		vTasksListInit = pdTRUE;
+		vListInitialise(&xTasksList);
+		xListTasksNumber = 0;
+	}
+	if (!listIS_CONTAINED_WITHIN(&xTasksList, &fromTCB->pxTaskTCBListItem)) {
+		vListInitialiseItem(&(fromTCB->pxTaskTCBListItem));
+		listSET_LIST_ITEM_OWNER(&(fromTCB->pxTaskTCBListItem), fromTCB);
+		listSET_LIST_ITEM_VALUE(&(fromTCB->pxTaskTCBListItem), withValue);
+		vListInsertEnd(&xTasksList, &(fromTCB->pxTaskTCBListItem));
+		xListTasksNumber++;
+		return pdTRUE;
+	}
+	return pdFALSE;
+}
+
+
+
 TaskHandle_t vMSTPeriodicTaskCreate(TaskFunction_t pvJobCode,
 		const char *pcName, uint16_t usStackDepth, void *pvParameters,
 		UBaseType_t uxPriority, TaskHandle_t *pxCreatedTask,
@@ -234,16 +256,7 @@ TaskHandle_t vMSTPeriodicTaskCreate(TaskFunction_t pvJobCode,
 	If RMS we fill a list containg all the declared tasks by the user before kernel init.
 	They will be reordered and properly set-up as the kernel start is called
 	*/
-	if (vTasksListInit == pdFALSE) {
-		vTasksListInit = pdTRUE;
-		vListInitialise(&xTasksList);
-		xListTasksNumber = 0;
-	}
-	listSET_LIST_ITEM_OWNER(&(xNewExtTCB->pxTaskTCBListItem), xNewExtTCB);
-	listSET_LIST_ITEM_VALUE(&(xNewExtTCB->pxTaskTCBListItem), xTaskPeriod);
-	vListInitialiseItem(&(xNewExtTCB->pxTaskTCBListItem));
-	vListInsertEnd(&xTasksList, &(xNewExtTCB->pxTaskTCBListItem));
-	xListTasksNumber++;
+	prvAddItemToxTasksList(xNewExtTCB, xTaskPeriod);
 	return pdPASS;
 #else
 	/*
@@ -460,6 +473,8 @@ static void prvMSTSporadicGenericJob(void *pvParameters) {
 			xCurrentHandle, mstLOCAL_STORAGE_DATA_INDEX);
 	configASSERT(xCurrExtTCB != NULL);
 	for (;;) {
+
+#if mst_USE_SPORADIC_SERVER == 0
 		/*
 		 Takes notification for current task, could be from timer or user
 		 */
@@ -499,6 +514,20 @@ static void prvMSTSporadicGenericJob(void *pvParameters) {
 		xCurrExtTCB->xJobCalled = pdFALSE;
 		taskEXIT_CRITICAL();
 
+#else
+	/*
+	Using a sporadic server, no handling of interarrival, only holding
+	a lock on SS request
+	*/
+	xCurrExtTCB->xJobCalled = pdFALSE;
+	uint32_t notificationGiver;
+	if (xTaskNotifyWait(0, NOTIFY_SS_REQUEST,
+			&notificationGiver, portMAX_DELAY) == pdPASS) {
+		xCurrExtTCB->xJobCalled = pdTRUE;
+	}
+#endif
+
+
 		BaseType_t actualCPUCycles = getTaskRunTime(xCurrentHandle);
 		xCurrExtTCB->xPrevStartTime = xTaskGetTickCount();
 		xCurrExtTCB->pvJobCode(pvParameters);
@@ -512,9 +541,15 @@ static void prvMSTSporadicGenericJob(void *pvParameters) {
 		*/
 		actualCPUCycles = getTaskRunTime(xCurrentHandle) - actualCPUCycles;
 		
-		xCurrExtTCB->xPrevExecTime = xCurrExtTCB->xPrevFinishTime
-				- xCurrExtTCB->xPrevStartTime;
-
+		//xCurrExtTCB->xPrevExecTime = xCurrExtTCB->xPrevFinishTime - xCurrExtTCB->xPrevStartTime;
+		xCurrExtTCB->xPrevExecTime = actualCPUCycles;
+		#if mst_USE_SPORADIC_SERVER == 1
+		/*
+		Job over, notify sporadic server
+		*/
+		xTaskNotify(*(xCurrExtTCB->pxCreatedTask), NOTIFY_SS_REQUEST_DONE, eSetBits);
+		xCurrExtTCB->xJobCalled = pdFALSE;
+		#endif
 		#if mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF
 		/*
 		Notify dispatcher of finished job
@@ -648,7 +683,7 @@ After every sporadic run the sporadic server calculates the remaining budget, an
 timer for replenishment.
 
 Replenishment rule: 
-If a task with period Tp uses budget 'n', a replenishment timer is set to start at Tp + n.
+If a task with period Tp uses budget 'n', a replenishment timer is set to start at Tp + n, and replenishes 'n' units.
 
 Another timer is always active, it is a watchdog timer, its always updated and
 gets called when the budget is finished. When this happens the running task is suspended until
@@ -659,9 +694,84 @@ Only 1 task at a time is ran.
 There is 1 data structure, kept at EDF order. The first in the list is the first to run.
 */
 
+
+
 #if (mst_USE_SPORADIC_SERVER == 1 && mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS)
+
+volatile BaseType_t SporadicServerBudget = 0;
+static void prvMSTGenericReplenishmentTimerCallback(TimerHandle_t xTimer) {
+	/*
+	 Notify a sporadic task but make sure it knows it was the timer to notify, by passing a parameter
+	 */
+	taskENTER_CRITICAL();
+	BaseType_t param = (BaseType_t) pvTimerGetTimerID(xTimer);
+	SporadicServerBudget += param;
+	taskEXIT_CRITICAL();
+}
+volatile BaseType_t isNextTaskAvailable = pdFALSE;
+
 static void prvMSTSporadicServerJob(void *pvParameters) {
+	
+	TaskHandle_t xCurrentHandle = xTaskGetCurrentTaskHandle();
+	extTCB_t *xCurrExtTCB = (extTCB_t*) pvTaskGetThreadLocalStoragePointer(
+			xCurrentHandle, mstLOCAL_STORAGE_DATA_INDEX);
+	configASSERT(xCurrExtTCB != NULL);
+	SporadicServerBudget = xCurrExtTCB->xTaskWCET;
 	for (;;) {
+		while(SporadicServerBudget <= 0);
+		while (listLIST_IS_EMPTY(&xTasksList));
+		ListItem_t *xItm = listGET_HEAD_ENTRY(&xTasksList);
+		extTCB_t *xTCB = (extTCB_t *) xItm->pvOwner;
+		if(xTCB->xJobCalled){
+			//task is running
+			uint32_t notificationGiver;
+			if (xTaskNotifyWait(0, NOTIFY_SS_REQUEST_DONE | NOTIFY_SS_BUDGET_FINISHED,
+					&notificationGiver, portMAX_DELAY) == pdPASS) {
+				if (notificationGiver & NOTIFY_SS_REQUEST_DONE) {
+					/*the Sporadic job finished, we remove budget and
+					schedule replenishment. Note that xPrevExecTime considers
+					only the time for which the job actually ran in us, time used
+					form preempted tasks by the FreeRTOS kernel are not considered
+					*/
+					taskENTER_CRITICAL();
+					SporadicServerBudget = SporadicServerBudget - xTCB->xPrevExecTime;
+					if(SporadicServerBudget < 0){
+						//This should never happen
+						SporadicServerBudget = 0;
+					}
+					/*
+					Now schedule replenishment in time period + exec. time
+					*/
+					TimerHandle_t xTimer = xTimerCreate("replenishment timer", // Name of the timer
+					pdMS_TO_TICKS(xCurrExtTCB->xTaskInterarrivalTime), // Timer period in ticks
+					pdFALSE,                               // Auto-reload (periodic)
+					(void*) (xTCB->xPrevExecTime), // Replenishment time as parameter
+					prvMSTGenericReplenishmentTimerCallback                 // Callback function
+					);
+					/*
+					Now remove the job and start the replenishment timer
+					*/
+					if (listIS_CONTAINED_WITHIN(&xTasksList, &(xTCB->pxTaskTCBListItem))) {
+						uxListRemove(&(xTCB->pxTaskTCBListItem));
+						xListTasksNumber--;
+					} else {
+						configASSERT(pdFALSE);
+					}
+					configASSERT(xTimerStart(xTimer, 0) == pdPASS)
+					taskEXIT_CRITICAL();
+					
+				}else if(notificationGiver & NOTIFY_SS_BUDGET_FINISHED){
+					//the Sporadic job did not finish but budget is over
+					//This shall never happen, prevented by acceptance test!
+				}
+				//the job returned
+			}
+		}else{
+			/*run the task by notifying a SS request
+			This should put xJobCalled = pdTRUE
+			*/
+			xTaskNotify(*(xCurrExtTCB->pxCreatedTask), NOTIFY_SS_REQUEST, eSetBits);
+		}
 
 	}
 }
@@ -699,6 +809,16 @@ static BaseType_t prvComputeOrderedPriorities() {
 		 * Here we create the periodic tasks that we saved in the list
 		 */
 		configASSERT(prvPeriodicTaskCreate(xTCB_Reference));
+#if mst_USE_SPORADIC_SERVER == 1
+		//now the list shall be emptied and used to track sporadic jobs
+		while (!listLIST_IS_EMPTY(&xTasksList)) {
+			ListItem_t *pxItem = listGET_HEAD_ENTRY(&xTasksList); // first real item
+			extTCB_t *xTCB = (extTCB_t *) pxItem->pvOwner;
+			configASSERT(xTCB != NULL);
+			uxListRemove(pxItem); 
+		}
+		xListTasksNumber = 0;
+#endif
 #elif mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF
 		configASSERT(xTCB_Reference->pxCreatedTask != NULL);
 			vTaskPrioritySet(*(xTCB_Reference->pxCreatedTask), bNewPriority);
@@ -732,7 +852,7 @@ We compute the sporadic servers WCET and Tss, how this is done is better explain
 	/*
 	The sporadic server task is created like a normal "user-space" periodic task (priority is not relevant as recomputed later for RMS)
 	*/
-	vMSTPeriodicTaskCreate(prvSporadicServerTask, "SS", mst_SPORADIC_SERVER_STACK_SIZE, NULL, pdFALSE, SporadicServerHandle, tSS_Period, tSS_Period, 0, tSS_WCET);
+	vMSTPeriodicTaskCreate(prvMSTSporadicServerJob, "SS", mst_SPORADIC_SERVER_STACK_SIZE, NULL, pdFALSE, SporadicServerHandle, tSS_Period, tSS_Period, 0, tSS_WCET);
 #endif
 	configASSERT(prvComputeOrderedPriorities());
 
@@ -759,7 +879,7 @@ We compute the sporadic servers WCET and Tss, how this is done is better explain
 
  #if(mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF)
 
-//TODO: this can be very much optimized. The first two iterations can be put into one by 
+//This can be optimized. The first two iterations can be put into one by 
 //calculating past densities at each step
 static BaseType_t prvAsmissionControlEDF(extTCB_t *forTCB){
 	/*
@@ -860,10 +980,9 @@ static void prvMSTDispatch(TaskHandle_t *forTask, BaseType_t xAsCallee,
 		taskType_e xOfTaskType, BaseType_t xFromUserRequest) {
 
 	if (xAsCallee == pdTRUE) {
-#if mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF
-
 		extTCB_t *xCurrExtTCB = (extTCB_t*) pvTaskGetThreadLocalStoragePointer(
-	                            *forTask, mstLOCAL_STORAGE_DATA_INDEX);
+			                            *forTask, mstLOCAL_STORAGE_DATA_INDEX);
+#if mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF
 
 		/*
 		We run admission control
@@ -875,25 +994,9 @@ static void prvMSTDispatch(TaskHandle_t *forTask, BaseType_t xAsCallee,
 		/*
 		A job is accepted, we add it to list and recompute priorities
 		*/
-		
 		taskENTER_CRITICAL();
 		{
-		    if (vTasksListInit == pdFALSE) {
-		        vTasksListInit = pdTRUE;
-		        vListInitialise(&xTasksList);
-		        xListTasksNumber = 0;
-		    }
-		    //TODO: This might not be ideal, would we want same task in list? This is a rejection
-		    if (!listIS_CONTAINED_WITHIN(&xTasksList, &xCurrExtTCB->pxTaskTCBListItem)) {
-		        vListInitialiseItem(&xCurrExtTCB->pxTaskTCBListItem);
-		        listSET_LIST_ITEM_OWNER(&xCurrExtTCB->pxTaskTCBListItem, xCurrExtTCB);
-		        listSET_LIST_ITEM_VALUE(&xCurrExtTCB->pxTaskTCBListItem,
-		            xCurrExtTCB->xPrevAbsDeadline + xCurrExtTCB->xTaskDeadline);
-
-		        vListInsertEnd(&xTasksList, &xCurrExtTCB->pxTaskTCBListItem);
-		        xListTasksNumber++;
-		    }
-
+			prvAddItemToxTasksList(xCurrExtTCB, (xCurrExtTCB->xPrevAbsDeadline + xCurrExtTCB->xTaskDeadline));
 		    configASSERT(prvComputeOrderedPriorities());
 		}
 		taskEXIT_CRITICAL();
@@ -906,11 +1009,19 @@ static void prvMSTDispatch(TaskHandle_t *forTask, BaseType_t xAsCallee,
 			xTaskNotifyGive(*forTask);
 			break;
 		case taskTypeSporadic:
+			#if (mst_USE_SPORADIC_SERVER == 1)
+			/*with sporadic server we update the runnable task thread,
+			the sporadic server task will handle it
+			*/
+			prvAddItemToxTasksList(xCurrExtTCB, xCurrExtTCB->xTaskDeadline);
+		    configASSERT(prvComputeOrderedPriorities());
+			#else
 			if (xFromUserRequest == pdTRUE) {
 				xTaskNotify(*forTask, NOTIFY_USER_REQUEST, eSetBits);
 			} else {
 				xTaskNotify(*forTask, NOTIFY_INTERARRIVAL_TIMER, eSetBits);
 			}
+			#endif
 			break;
 		default:
 			configASSERT(pdFALSE)
