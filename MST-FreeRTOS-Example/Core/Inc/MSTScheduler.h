@@ -29,6 +29,7 @@
 #include "list.h"
 #include "timers.h"
 #include "stdbool.h"
+#include <math.h>
 
 /**
  * @brief Macro to select the technique for periodic task management.

@@ -29,6 +29,7 @@
 #include "list.h"
 #include "timers.h"
 #include "stdbool.h"
+#include <math.h>
 
 /**
  * @brief Macro to select the technique for periodic task management.
@@ -59,7 +60,7 @@
  * 
  * Default is RMS scheduling policy.
  */
-#define mst_schedSCHEDULING_POLICY mst_schedSCHEDULING_RMS
+#define mst_schedSCHEDULING_POLICY mst_schedSCHEDULING_EDF
 
 
 /**
@@ -70,6 +71,13 @@
  * The sporadic server is used only in case of static scheduling (e.g. RMS)
  */
 #define mst_USE_SPORADIC_SERVER 1
+
+/**
+ * @brief Stack to be assigned to sporadic server 
+ * 
+ * Default: minimal stack size
+ */
+#define mst_SPORADIC_SERVER_STACK_SIZE configMINIMAL_STACK_SIZE
 
 
 #ifndef configNUM_THREAD_LOCAL_STORAGE_POINTERS

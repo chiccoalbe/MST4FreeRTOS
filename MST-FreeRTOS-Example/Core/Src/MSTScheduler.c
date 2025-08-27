@@ -40,10 +40,7 @@ static void prvMSTDispatch(TaskHandle_t *, BaseType_t,
 static void prvMSTPeriodicTimerCallback(TimerHandle_t );
 #endif
 
-#if(mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF)
-static BaseType_t prvAsmissionControlEDF(extTCB_t *);
-float prvPeriodicTasksDensity = 0;
-#endif
+
 
 static void prvMSTSporadicTimerCallback(TimerHandle_t );
 
@@ -78,8 +75,9 @@ void* pvTaskGetThreadLocalStoragePointer(TaskHandle_t xTaskToQuery,
  */
 #define mstLOCAL_STORAGE_DATA_INDEX 0
 
-#if (mst_USE_SPORADIC_SERVER == 1 && mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS)
+
 static TaskHandle_t SporadicServerHandle;
+#if (mst_USE_SPORADIC_SERVER == 1 && mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS)
 static void prvMSTSporadicServerJob(void *pvParameters)
 #endif
 
@@ -152,13 +150,20 @@ typedef struct MSTextendedTCB {
 
 } extTCB_t;
 
+#if(mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF)
+static BaseType_t prvAsmissionControlEDF(extTCB_t *);
+float prvPeriodicTasksDensity = 0;
+#endif
+
 static BaseType_t prvPeriodicTaskCreate(extTCB_t *xFromTCB) {
+
+
 	if(xFromTCB->pxCreatedTask == &SporadicServerHandle){
 		/*
 		The periodic task passed is the sporadic server, it shall not
 		pass the prvMSTPeriodicGenericJob but the prvMSTSporadicServerJob
 		*/
-	if (xTaskCreate(prvMSTSporadicServerJob, xFromTCB->pcName,
+	if (xTaskCreate(prvMSTSporadicGenericJob, xFromTCB->pcName,
 			xFromTCB->usStackDepth, xFromTCB->pvParameters,
 			xFromTCB->uxPriority, xFromTCB->pxCreatedTask) == pdPASS) {
 				/*
@@ -417,7 +422,7 @@ BaseType_t vMSTSporadicTaskCreate(TaskFunction_t pvJobCode, const char *pcName,
 						.xTaskInterarrivalTime = xTaskInterarrivalTime,
 						.xJobCalled = pdFALSE, .xInterarrivalTimerRunning =
 						pdFALSE };
-		prvXMaxInterrarrivalTimer = (xTaskInterarrivalTime > prvXMaxInterrarrivalTime) ? xTaskInterarrivalTime : prvXMaxInterrarrivalTimer;
+		prvXMaxInterrarrivalTime = (xTaskInterarrivalTime > prvXMaxInterrarrivalTime) ? xTaskInterarrivalTime : prvXMaxInterrarrivalTime;
 		/*
 		 We create the task and allocate, but we do not clear the mutex nor start the timer
 		 */
@@ -439,6 +444,15 @@ BaseType_t vMSTSporadicTaskCreate(TaskFunction_t pvJobCode, const char *pcName,
  * @param pvParameters
  */
 
+
+static BaseType_t getTaskRunTime(TaskHandle_t handle) {
+	TaskStatus_t status;
+	UBaseType_t count = uxTaskGetSystemState(&status, 1, NULL);
+	if (count == 1 && status.xHandle == handle) {
+		return status.ulRunTimeCounter;
+	}
+	return 0;
+}
 static void prvMSTSporadicGenericJob(void *pvParameters) {
 
 	TaskHandle_t xCurrentHandle = xTaskGetCurrentTaskHandle();
@@ -485,7 +499,7 @@ static void prvMSTSporadicGenericJob(void *pvParameters) {
 		xCurrExtTCB->xJobCalled = pdFALSE;
 		taskEXIT_CRITICAL();
 
-		BaseType_t actualCPUCycles = xCurrExtTCB->ulRunTimeCounter;
+		BaseType_t actualCPUCycles = getTaskRunTime(xCurrentHandle);
 		xCurrExtTCB->xPrevStartTime = xTaskGetTickCount();
 		xCurrExtTCB->pvJobCode(pvParameters);
 		/*
@@ -496,7 +510,7 @@ static void prvMSTSporadicGenericJob(void *pvParameters) {
 		The user shall have set up runtime stats appropriately:
 		1 tick->1us, hence 'actualCPUCycles' is in us
 		*/
-		actualCPUCycles = xCurrExtTCB->ulRunTimeCounter - actualCPUCycles;
+		actualCPUCycles = getTaskRunTime(xCurrentHandle) - actualCPUCycles;
 		
 		xCurrExtTCB->xPrevExecTime = xCurrExtTCB->xPrevFinishTime
 				- xCurrExtTCB->xPrevStartTime;
@@ -547,7 +561,7 @@ static int prv_compare(const void *arg1, const void *arg2) {
 
 }
 
-static void prvComputeSporadicServerProprierties(TickType_t &tSS_Period, TickType_t &tSS_WCET){
+static void prvComputeSporadicServerProprierties(TickType_t *tSS_Period, TickType_t *tSS_WCET){
 	/*
 	Rationale:
 	We want to have a sporadic server that has appropriate period and WCET considering the context
@@ -575,7 +589,7 @@ static void prvComputeSporadicServerProprierties(TickType_t &tSS_Period, TickTyp
 	So here we try every possibility from max C_ss to min C_ss
 	*/
 	BaseType_t m = xTasksList.uxNumberOfItems + 1;
-	BaseType_t U = m(2^(1/m) - 1);
+	BaseType_t U = m * (pow(2.0, 1.0 / m) - 1.0);
 	TickType_t min_css = 0;
 	TickType_t max_css = 0;
 	TickType_t sum_up = 0; //
@@ -599,7 +613,7 @@ static void prvComputeSporadicServerProprierties(TickType_t &tSS_Period, TickTyp
 	while(Css >= min_css ){
 		configASSERT(Css > 0);
 		Tss = Css/Uss;
-		if(Tss > prvXMaxInterrarrivalTimer){
+		if(Tss > prvXMaxInterrarrivalTime){
 			//not ok tss, keep going
 			Css -= 1;
 		}else{
@@ -611,6 +625,7 @@ static void prvComputeSporadicServerProprierties(TickType_t &tSS_Period, TickTyp
 	*tSS_WCET = Css;
 }
 
+#endif
 
 #if (mst_USE_SPORADIC_SERVER == 1 && mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS)
 static BaseType_t prvAsmissionControlSporadicServer(extTCB_t forTCB){
@@ -691,7 +706,7 @@ static BaseType_t prvComputeOrderedPriorities() {
 	}
 	return pdPASS;
 }
-#endif
+
 
 /*
  MST version of scheduler start
@@ -768,7 +783,7 @@ static BaseType_t prvAsmissionControlEDF(extTCB_t *forTCB){
 		ListItem_t *xItm = listGET_HEAD_ENTRY(&xTasksList); // this is xListEnd.pxNext
 		for (int i = 0; i < xListTasksNumber; i++) {
 			extTCB_t *xTCB = (extTCB_t *) xItm->pvOwner;
-			xTaskAbsDeadline = xTCB->xPrevStartTime + TCB->xTaskDeadline;
+			xTaskAbsDeadline = xTCB->xPrevStartTime + xTCB->xTaskDeadline;
 			TickType_t xDval = xTaskAbsDeadline - now;
 			if(xDval < xNewJobAbsDeadline){
 				//calculate d-t for certain delta
@@ -798,10 +813,10 @@ static BaseType_t prvAsmissionControlEDF(extTCB_t *forTCB){
 	float densitiesArray[numOfIntervals];
 	memset(densitiesArray, 0, sizeof(densitiesArray));
 
-	ListItem_t *xItm = listGET_HEAD_ENTRY(&xTasksList); // this is xListEnd.pxNext
+	xItm = listGET_HEAD_ENTRY(&xTasksList); // this is xListEnd.pxNext
 		for (int i = 0; i < xListTasksNumber; i++) {
 			extTCB_t *xTCB = (extTCB_t *) xItm->pvOwner;
-			xTaskAbsDeadline = xTCB->xPrevStartTime + TCB->xTaskDeadline;
+			xTaskAbsDeadline = xTCB->xPrevStartTime + xTCB->xTaskDeadline;
 			for(int j = 0; j < numOfIntervals; j++){
 				if(xTaskAbsDeadline >= intervalsStarts[j]){
 					//to consider for the density
