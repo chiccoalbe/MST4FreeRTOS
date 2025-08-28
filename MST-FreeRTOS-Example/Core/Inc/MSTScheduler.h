@@ -1,8 +1,7 @@
-/*! @mainpage My Personal Index Page
+/*! @mainpage MSTScheduler info
  *
  * @section intro_sec Introduction
  *
- * This is the introduction.
  *
  * @section install_sec Installation
  *
@@ -14,7 +13,7 @@
 /**
  * @file MSTScheduler.h
  * @author Enrico Alberti
- * @date 2024
+ * @date 2024-2025
  * @brief Header file for the standard model adaptation library of FreeRTOS.
  * 
  * This file contains definitions and function prototypes for the 
@@ -104,11 +103,13 @@
 
 #endif
 
-#define NOTIFY_INTERARRIVAL_TIMER   (1 << 0)
-#define NOTIFY_USER_REQUEST         (1 << 1)
-#define NOTIFY_SS_REQUEST           (1 << 2)
-#define NOTIFY_SS_REQUEST_DONE      (1 << 3)
-#define NOTIFY_SS_BUDGET_FINISHED   (1 << 4)
+#define NOTIFY_INTERARRIVAL_TIMER   	(1 << 0)
+#define NOTIFY_USER_REQUEST         	(1 << 1)
+#define NOTIFY_SS_REQUEST           	(1 << 2)
+#define NOTIFY_SS_REQUEST_DONE      	(1 << 3)
+#define NOTIFY_SS_BUDGET_FINISHED   	(1 << 4)
+#define NOTIFY_SS_NEW_JOB_AVAILABLE 	(1 << 5)
+#define NOTIFY_SS_BUDGET_REPLENISHED    (1 << 6)
 
 /**
  * @brief Initializes the MST Scheduler.

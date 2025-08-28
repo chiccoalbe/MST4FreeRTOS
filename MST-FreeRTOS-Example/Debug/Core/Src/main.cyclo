@@ -1,5 +1,5 @@
 ../Core/Src/main.c:99:6:MSTTask1	2
-../Core/Src/main.c:107:6:MSTTask2	2
+../Core/Src/main.c:108:6:MSTTask2	2
 ../Core/Src/main.c:116:6:MSTTask3	2
 ../Core/Src/main.c:123:6:MSTTask4	2
 ../Core/Src/main.c:129:6:HAL_UART_TxCpltCallback	2

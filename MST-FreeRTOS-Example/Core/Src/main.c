@@ -97,6 +97,7 @@ TaskHandle_t Task3Handle;
 TaskHandle_t Task4Handle;
 
 void MSTTask1(void *pvParameters) {
+	vMSTSporadicTaskRun(&Task3Handle);
 	if (xSemaphoreTake(xBinarySemUART2, portMAX_DELAY) == pdTRUE) {
 		length = snprintf((char*) transmit, sizeof(transmit), "Task1\n");
 		HAL_Delay(300);
@@ -105,7 +106,6 @@ void MSTTask1(void *pvParameters) {
 }
 
 void MSTTask2(void *pvParameters) {
-	vMSTSporadicTaskRun(&Task3Handle);
 	vMSTSporadicTaskRun(&Task4Handle);
 	if (xSemaphoreTake(xBinarySemUART2, portMAX_DELAY) == pdTRUE) {
 		length = snprintf((char*) transmit, sizeof(transmit), "Task2\n");
