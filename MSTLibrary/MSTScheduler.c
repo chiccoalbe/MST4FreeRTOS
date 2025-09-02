@@ -38,7 +38,9 @@ static void prvMSTDispatch(TaskHandle_t*, BaseType_t, taskType_e, BaseType_t);
 static void prvMSTPeriodicTimerCallback(TimerHandle_t);
 #endif
 
+#if mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF
 static void prvMSTSporadicTimerCallback(TimerHandle_t);
+#endif
 
 #if (mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS || mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF) 
 static BaseType_t vTasksListInit = pdFALSE;
@@ -156,6 +158,7 @@ static BaseType_t prvPeriodicTaskCreate(extTCB_t *xFromTCB) {
 		 The periodic task passed is the sporadic server, it shall not
 		 pass the prvMSTPeriodicGenericJob but the prvMSTSporadicServerJob
 		 */
+#if mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS
 		if (xTaskCreate(prvMSTSporadicServerJob, xFromTCB->pcName,
 				xFromTCB->usStackDepth, xFromTCB->pvParameters,
 				xFromTCB->uxPriority, xFromTCB->pxCreatedTask) == pdPASS) {
@@ -168,6 +171,7 @@ static BaseType_t prvPeriodicTaskCreate(extTCB_t *xFromTCB) {
 		} else {
 			return pdFAIL;
 		}
+#endif
 	} else {
 		/*
 		 Generic periodic task
@@ -175,6 +179,12 @@ static BaseType_t prvPeriodicTaskCreate(extTCB_t *xFromTCB) {
 		if (xTaskCreate(prvMSTPeriodicGenericJob, xFromTCB->pcName,
 				xFromTCB->usStackDepth, xFromTCB->pvParameters,
 				xFromTCB->uxPriority, xFromTCB->pxCreatedTask) == pdPASS) {
+#if (mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF)
+			float add = ((float)xFromTCB->xTaskWCET) / (float)(xFromTCB->xTaskPeriod);
+			taskENTER_CRITICAL();
+			prvPeriodicTasksDensity += add;
+			taskEXIT_CRITICAL();
+#endif
 #if (mst_test_PERIODIC_METHOD == 2)
 			/*
 			 Create the timer,
@@ -194,6 +204,7 @@ static BaseType_t prvPeriodicTaskCreate(extTCB_t *xFromTCB) {
 			return pdFAIL;
 		}
 	}
+	return pdPASS;
 }
 
 /*
@@ -482,6 +493,15 @@ static void prvMSTSporadicGenericJob(void *pvParameters) {
 	extTCB_t *xCurrExtTCB = (extTCB_t*) pvTaskGetThreadLocalStoragePointer(
 			xCurrentHandle, mstLOCAL_STORAGE_DATA_INDEX);
 	configASSERT(xCurrExtTCB != NULL);
+#if mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF
+	TimerHandle_t xTimerSporadic = xTimerCreate("sporadic interarrival timer", // Name of the timer
+					pdMS_TO_TICKS(xCurrExtTCB->xTaskInterarrivalTime),
+					pdFALSE,
+					(void*) (xCurrExtTCB->pxCreatedTask),
+					prvMSTSporadicTimerCallback
+					);
+#endif
+
 	for (;;) {
 
 #if mst_USE_SPORADIC_SERVER == 0
@@ -511,14 +531,8 @@ static void prvMSTSporadicGenericJob(void *pvParameters) {
 		 Notify job called and interarrival timer from release
 		 */
 		xCurrExtTCB->xJobCalled = pdTRUE;
-		TimerHandle_t xTimer = xTimerCreate("sporadic interarrival timer", // Name of the timer
-				pdMS_TO_TICKS(xCurrExtTCB->xTaskInterarrivalTime), // Timer period in ticks
-				pdFALSE,                               // Auto-reload (periodic)
-				(void*) (xCurrExtTCB->pxCreatedTask), // Task handle as parameter
-				prvMSTSporadicTimerCallback                 // Callback function
-				);
-		configASSERT(xTimerStart(xTimer, 0) == pdPASS)
-		xCurrExtTCB->xTaskSpecificTimer = xTimer;
+		configASSERT(xTimerStart(xTimerSporadic, 0) == pdPASS)
+		xCurrExtTCB->xTaskSpecificTimer = xTimerSporadic;
 		taskENTER_CRITICAL(); //maybe not needed
 		xCurrExtTCB->xInterarrivalTimerRunning = pdTRUE;
 		xCurrExtTCB->xJobCalled = pdFALSE;
@@ -604,9 +618,10 @@ static int prv_compare(const void *arg1, const void *arg2) {
 		return 1;
 	return 0; 
 #endif
-
 }
+#endif
 
+#if (mst_USE_SPORADIC_SERVER == 1 && mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS)
 static void prvComputeSporadicServerProprierties(TickType_t *tSS_Period,
 		TickType_t *tSS_WCET) {
 	/*
@@ -672,9 +687,7 @@ static void prvComputeSporadicServerProprierties(TickType_t *tSS_Period,
 	*tSS_WCET = Css;
 }
 
-#endif
 
-#if (mst_USE_SPORADIC_SERVER == 1 && mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS)
 /*
  * In the MST version of the sporadic server, only one sporadic job runs at a time.
  * To calculate acceptance we simply need to evaluate the slack:
@@ -736,11 +749,16 @@ volatile BaseType_t SporadicServerBudget = 0;
 
 volatile BaseType_t isSSJobSuspended = pdFALSE;
 
+/*
+ * UNUSED FOR V0.1
+ */
+
 static void prvMSTBudgetWatchdogCallback(TimerHandle_t xTimer) {
 	/*
 	 This is a naive timer, not actually correct as it does not
 	 consider that tasks can be preempted while running
 	 */
+	return; //V0.1 inhibits watchdog
 	extTCB_t *xTCB = (extTCB_t*) pvTimerGetTimerID(xTimer);
 
 	taskENTER_CRITICAL();
@@ -768,7 +786,7 @@ static void prvMSTGenericReplenishmentTimerCallback(TimerHandle_t xTimer) {
 	taskEXIT_CRITICAL();
 }
 
-static prvRemoveSSItemFromList(extTCB_t *forTCB) {
+static void prvRemoveSSItemFromList(extTCB_t *forTCB) {
 	taskENTER_CRITICAL();
 	if (listIS_CONTAINED_WITHIN(&xTasksList, &(forTCB->pxTaskTCBListItem))) {
 		uxListRemove(&(forTCB->pxTaskTCBListItem));
@@ -835,7 +853,11 @@ static void prvMSTSporadicServerJob(void *pvParameters) {
 			//start budget watchdog
 			vTimerSetTimerID(xBudgetWatchdogTimer,
 					(void*) xCurrentRunningSporadicTCB);
-			if (SporadicServerBudget > 0) {
+			/*
+			 * UNUSED FOR V0.1
+			 */
+			/*if (SporadicServerBudget > 0) {
+
 				if (isSSJobSuspended == pdTRUE) {
 					taskENTER_CRITICAL();
 					isSSJobSuspended = pdFALSE;
@@ -847,7 +869,7 @@ static void prvMSTSporadicServerJob(void *pvParameters) {
 				configASSERT(xResult == pdPASS);
 				configASSERT(xBudgetWatchdogTimer != NULL);
 				xTimerStart(xBudgetWatchdogTimer, 0);
-			}
+			}*/
 
 			uint32_t notificationGiver;
 			if (xTaskNotifyWait(0,
@@ -1005,6 +1027,12 @@ void vMSTSchedulerStart(void) {
 #endif
 	configASSERT(prvComputeOrderedPriorities());
 
+#else
+	//Not RMS
+#if (mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS)
+	prvPeriodicTasksDensity
+#endif
+	configASSERT(mst_USE_SPORADIC_SERVER == 0);
 #endif
 
 	vTaskStartScheduler();
@@ -1028,87 +1056,89 @@ void vMSTSchedulerStart(void) {
 
 //This can be optimized. The first two iterations can be put into one by 
 //calculating past densities at each step
-static BaseType_t prvAsmissionControlEDF(extTCB_t *forTCB){
-	/*
-	The EDF scheduler maintains a list of the jobs, in non-decreasing order of deadline (xTasksList)
-	We need to check te intervals up to the new jobs deadline and calculate the density
+static BaseType_t prvAsmissionControlEDF(extTCB_t *forTCB)
+{
+    TickType_t now   = xTaskGetTickCount();
+    TickType_t D_new = pdMS_TO_TICKS(forTCB->xTaskDeadline);
+    TickType_t C_new = pdMS_TO_TICKS(forTCB->xTaskWCET);
+    TickType_t absD_new = now + D_new;
 
-	We start by calculating all intervals Ik and storing them
-	*/
-	 
-	TickType_t xPrev = 0;
-	TickType_t intervalsArray[xListTasksNumber+1];
-	TickType_t intervalsStarts[xListTasksNumber+1];
-	BaseType_t numOfIntervals;
-	TickType_t now = xTaskGetTickCount();
-	TickType_t xNewJobAbsDeadline = now + forTCB->xTaskDeadline;
-	TickType_t xTaskAbsDeadline = 0;
+    // Gather cutpoints (abs deadlines of active jobs up to new job)
+    TickType_t cutpoints[xListTasksNumber];
+    BaseType_t ncuts = 0;
 
-		ListItem_t *xItm = listGET_HEAD_ENTRY(&xTasksList); // this is xListEnd.pxNext
-		for (int i = 0; i < xListTasksNumber; i++) {
-			extTCB_t *xTCB = (extTCB_t *) xItm->pvOwner;
-			xTaskAbsDeadline = xTCB->xPrevStartTime + xTCB->xTaskDeadline;
-			TickType_t xDval = xTaskAbsDeadline - now;
-			if(xDval < xNewJobAbsDeadline){
-				//calculate d-t for certain delta
-				intervalsArray[i] = xDval - xPrev;
-				intervalsStarts[i] = xPrev;
-				xPrev = xDval;
-				numOfIntervals++;
-			}else{
-				//calculate last interval density with new job deadline
-				intervalsArray[i] = xNewJobAbsDeadline - xPrev;
-				intervalsStarts[i] = xPrev;
-				numOfIntervals++;
-				break;
-			}
-			configASSERT(xTCB != NULL);  
-			
-			xItm = listGET_NEXT(xItm);
+    ListItem_t *it = listGET_HEAD_ENTRY(&xTasksList);
+    for (BaseType_t i = 0; i < xListTasksNumber; i++) {
+        extTCB_t *tcb = (extTCB_t *) it->pvOwner;
+        configASSERT(tcb != NULL);
 
-		}
+        TickType_t absD_i = listGET_LIST_ITEM_VALUE(&tcb->pxTaskTCBListItem);
+        if (absD_i > now && absD_i <= absD_new) {
+            TickType_t rel = absD_i - now;
+            // insert unique in sorted order (ncuts is small)
+            BaseType_t j = ncuts;
+            while (j > 0 && cutpoints[j-1] > rel) { cutpoints[j] = cutpoints[j-1]; j--; }
+            if (j == 0 || cutpoints[j-1] != rel) { cutpoints[j] = rel; ncuts++; }
+        }
+        it = listGET_NEXT(it);
+    }
 
-	/*
-	Now we calculate the density of each interval (fixed interval, all current tasks)
-	When iterating, the task shall add to the density only if its interval overlaps, hence,
-	only if its absolute deadline is higher than the interval start
-	*/
+    // Build intervals [0..D_new] from cutpoints
+    TickType_t starts[xListTasksNumber + 1];
+    TickType_t lens  [xListTasksNumber + 1];
+    BaseType_t nint = 0;
 
-	float densitiesArray[numOfIntervals];
-	memset(densitiesArray, 0, sizeof(densitiesArray));
+    TickType_t prev = 0;
+    for (BaseType_t i = 0; i < ncuts; i++) {
+        if (cutpoints[i] > prev) {
+            starts[nint] = prev;
+            lens  [nint] = cutpoints[i] - prev;
+            nint++;
+            prev = cutpoints[i];
+        }
+    }
+    if (prev < D_new) {
+        starts[nint] = prev;
+        lens  [nint] = D_new - prev;
+        nint++;
+    }
 
-	xItm = listGET_HEAD_ENTRY(&xTasksList); // this is xListEnd.pxNext
-		for (int i = 0; i < xListTasksNumber; i++) {
-			extTCB_t *xTCB = (extTCB_t *) xItm->pvOwner;
-			xTaskAbsDeadline = xTCB->xPrevStartTime + xTCB->xTaskDeadline;
-			for(int j = 0; j < numOfIntervals; j++){
-				if(xTaskAbsDeadline >= intervalsStarts[j]){
-					//to consider for the density
-					densitiesArray[j] += ((float)(xTCB->xTaskWCET))/intervalsArray[j];
-				}else{
-					//not to be considered also for next intervals
-					break;
-				}
-			}
-			configASSERT(xTCB != NULL);  
-			
-			xItm = listGET_NEXT(xItm);
+    // Densities for each interval
+    float dens[xListTasksNumber + 1];
+    for (BaseType_t k = 0; k < nint; k++) dens[k] = 0.0f;
 
-		}
+    it = listGET_HEAD_ENTRY(&xTasksList);
+    for (BaseType_t i = 0; i < xListTasksNumber; i++) {
+        extTCB_t *tcb = (extTCB_t *) it->pvOwner;
+        configASSERT(tcb != NULL);
 
-	/*
-	At this point all densities have been computed, we can run the acceptances
-	*/
-	for(int i = 0; i <numOfIntervals; i++ ){
-		if (((float)forTCB->xTaskWCET / (xNewJobAbsDeadline - now)) 
-		+ densitiesArray[i] > 1.0f - prvPeriodicTasksDensity){
-				//not accepted
-				return pdFALSE;
-			}
-	}
-	return pdTRUE;
+        TickType_t C_i   = pdMS_TO_TICKS(tcb->xTaskWCET);
+        TickType_t absD_i = listGET_LIST_ITEM_VALUE(&tcb->pxTaskTCBListItem);
+        TickType_t rel    = (absD_i > now) ? (absD_i - now) : 0;
+
+        for (BaseType_t k = 0; k < nint; k++) {
+            if (rel > starts[k]) {
+                configASSERT(lens[k] > 0);
+                dens[k] += ((float)C_i) / ((float)lens[k]);
+            } else {
+                break;
+            }
+        }
+        it = listGET_NEXT(it);
+    }
+
+    // Admission rule (for all intervals up to l)
+    for (BaseType_t k = 0; k < nint; k++) {
+        float checkVal = ((float)C_new / (float)D_new) + dens[k];
+        if (checkVal > (1.0f - prvPeriodicTasksDensity)) {
+            return pdFALSE;    // reject
+        }
+    }
+    return pdTRUE;     // accept
 }
+
 #endif
+
 
 /**
  * @brief The dispatch is used to manage the execution of all possible tasks

@@ -38,7 +38,9 @@ static void prvMSTDispatch(TaskHandle_t*, BaseType_t, taskType_e, BaseType_t);
 static void prvMSTPeriodicTimerCallback(TimerHandle_t);
 #endif
 
+#if mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF
 static void prvMSTSporadicTimerCallback(TimerHandle_t);
+#endif
 
 #if (mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS || mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF) 
 static BaseType_t vTasksListInit = pdFALSE;
@@ -491,12 +493,15 @@ static void prvMSTSporadicGenericJob(void *pvParameters) {
 	extTCB_t *xCurrExtTCB = (extTCB_t*) pvTaskGetThreadLocalStoragePointer(
 			xCurrentHandle, mstLOCAL_STORAGE_DATA_INDEX);
 	configASSERT(xCurrExtTCB != NULL);
+#if mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_EDF
 	TimerHandle_t xTimerSporadic = xTimerCreate("sporadic interarrival timer", // Name of the timer
 					pdMS_TO_TICKS(xCurrExtTCB->xTaskInterarrivalTime),
 					pdFALSE,
 					(void*) (xCurrExtTCB->pxCreatedTask),
 					prvMSTSporadicTimerCallback
 					);
+#endif
+
 	for (;;) {
 
 #if mst_USE_SPORADIC_SERVER == 0

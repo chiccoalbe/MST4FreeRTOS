@@ -183,7 +183,7 @@ int main(void) {
 	                       NULL,                      // Parameters
 	                       5,                         // Task priority
 	                       &Task1Handle,              // Task handle
-	                       5000,                     //period
+	                       2500,                     //period
 	                       500,                       //deadline
 	                       500,                       //phase
 	                       300                        //WCET
