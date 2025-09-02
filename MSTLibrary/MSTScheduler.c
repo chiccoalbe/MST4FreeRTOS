@@ -791,8 +791,6 @@ static void prvRemoveSSItemFromList(extTCB_t *forTCB) {
 	if (listIS_CONTAINED_WITHIN(&xTasksList, &(forTCB->pxTaskTCBListItem))) {
 		uxListRemove(&(forTCB->pxTaskTCBListItem));
 		xListTasksNumber--;
-	} else {
-		configASSERT(pdFALSE);
 	}
 	taskEXIT_CRITICAL();
 }
