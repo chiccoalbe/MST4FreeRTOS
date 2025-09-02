@@ -19,7 +19,7 @@ The library provides a higher-level API to declare task timing parameters such a
 ---
 
 ## Configuration
-Edit [`MSTScheduler.h`](MSTScheduler.h) to configure:
+Edit [`MSTScheduler.h`](MSTLibrary/MSTScheduler.h) to configure:
 - **Scheduling policy**:
   ```c
   #define mst_schedSCHEDULING_POLICY mst_schedSCHEDULING_RMS   
