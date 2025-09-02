@@ -491,6 +491,12 @@ static void prvMSTSporadicGenericJob(void *pvParameters) {
 	extTCB_t *xCurrExtTCB = (extTCB_t*) pvTaskGetThreadLocalStoragePointer(
 			xCurrentHandle, mstLOCAL_STORAGE_DATA_INDEX);
 	configASSERT(xCurrExtTCB != NULL);
+	TimerHandle_t xTimerSporadic = xTimerCreate("sporadic interarrival timer", // Name of the timer
+					pdMS_TO_TICKS(xCurrExtTCB->xTaskInterarrivalTime),
+					pdFALSE,
+					(void*) (xCurrExtTCB->pxCreatedTask),
+					prvMSTSporadicTimerCallback
+					);
 	for (;;) {
 
 #if mst_USE_SPORADIC_SERVER == 0
@@ -520,14 +526,8 @@ static void prvMSTSporadicGenericJob(void *pvParameters) {
 		 Notify job called and interarrival timer from release
 		 */
 		xCurrExtTCB->xJobCalled = pdTRUE;
-		TimerHandle_t xTimer = xTimerCreate("sporadic interarrival timer", // Name of the timer
-				pdMS_TO_TICKS(xCurrExtTCB->xTaskInterarrivalTime), // Timer period in ticks
-				pdFALSE,                               // Auto-reload (periodic)
-				(void*) (xCurrExtTCB->pxCreatedTask), // Task handle as parameter
-				prvMSTSporadicTimerCallback                 // Callback function
-				);
-		configASSERT(xTimerStart(xTimer, 0) == pdPASS)
-		xCurrExtTCB->xTaskSpecificTimer = xTimer;
+		configASSERT(xTimerStart(xTimerSporadic, 0) == pdPASS)
+		xCurrExtTCB->xTaskSpecificTimer = xTimerSporadic;
 		taskENTER_CRITICAL(); //maybe not needed
 		xCurrExtTCB->xInterarrivalTimerRunning = pdTRUE;
 		xCurrExtTCB->xJobCalled = pdFALSE;

@@ -1,3 +1,0 @@
-../Core/Src/freertos.c:64:13:configureTimerForRunTimeStats	1
-../Core/Src/freertos.c:71:22:getRunTimeCounterValue	1
-../Core/Src/freertos.c:81:6:vApplicationGetIdleTaskMemory	1

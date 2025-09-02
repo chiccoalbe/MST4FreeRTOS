@@ -1,3 +1,0 @@
-../Core/Src/MSTScheduler.c:92:12:vMSTPeriodicTaskCreate	2
-../Core/Src/MSTScheduler.c:147:13:prvMSTPeriodicGenericJob	6
-../Core/Src/MSTScheduler.c:246:6:vMSTSchedulerStart	1
