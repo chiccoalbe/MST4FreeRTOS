@@ -1,7 +1,7 @@
 # MST4FreeRTOS
 ### v 0.1
 ---
-> ⚠️ **Warning:** THIS IS A VERY EARLY ALPHA. ALL FUNCTIONALITY IMPLEMENTED, BUT NOT TOROUGHLY TESTED. IT IS NOT SUGGESTED TO USE IT IN PRODUCTION CODE
+> ⚠️ **Warning:** THIS IS AN EARLY ALPHA RELEASE. ALL FUNCTIONALITY IS IMPLEMENTED BUT NOT THOROUGHLY TESTED. USE IN PRODUCTION IS NOT RECOMMENDED.
 
 **MST4FreeRTOS** is a FreeRTOS extension that implements the **Standard Model (MST)** for real-time task scheduling.  
 It adds support for **periodic tasks**, **sporadic tasks**, and optionally a **sporadic server**, using either **Rate Monotonic Scheduling (RMS)** or **Earliest Deadline First (EDF)**.
@@ -107,8 +107,11 @@ vMSTSchedulerStart();   // Use this instead of vTaskStartScheduler()
 
 ## ⚠️ Known Issues
 
-- 📊 **Sporadic server budget watchdog**: The performed sporadic job acceptance test should assure that a new job will not go over-budget. If it happens the library integrates a watchdog timer, which will suspend and later resume the job. This watchdog has a known limitation: If FreeRTOS is running with preemption enabled, a sporadic task might get preempted after being activated by the server, the watchdog timer will consider the preemption time as time used by the job, reducing the actual budget.
-If a task runs over budget the watchdog that checks 
+- **Sporadic server budget watchdog**: The performed sporadic job acceptance test should assure that a new job will not go over-budget. If it happens the library integrates a watchdog timer, which will suspend and later resume the job. This watchdog has a known limitation: If FreeRTOS is running with preemption enabled, a sporadic task might get preempted after being activated by the server, the watchdog timer will consider the preemption time as time used by the job, reducing the actual budget.
+If a task runs over budget the watchdog that checks **AS SUCH THE SPORADIC SERVER WATCHDOG IS PRESENT BUT INHIBITED (COMMENTED OUT) IN V.0.1**
+
+- **Overhead too high for EDF acceptance**
+
 
 ---
 

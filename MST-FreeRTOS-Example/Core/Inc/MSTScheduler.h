@@ -59,7 +59,7 @@
  * 
  * Default is RMS scheduling policy.
  */
-#define mst_schedSCHEDULING_POLICY mst_schedSCHEDULING_RMS
+#define mst_schedSCHEDULING_POLICY mst_schedSCHEDULING_EDF
 
 
 /**
@@ -69,7 +69,7 @@
  * This will mean that sporadics are ran with user-set priority
  * The sporadic server is used only in case of static scheduling (e.g. RMS)
  */
-#define mst_USE_SPORADIC_SERVER 1
+#define mst_USE_SPORADIC_SERVER 0
 
 /**
  * @brief Stack to be assigned to sporadic server 

@@ -191,7 +191,7 @@ int main(void) {
 */
 	vMSTPeriodicTaskCreate(MSTTask2, "2",
 	                       configMINIMAL_STACK_SIZE,
-	                       NULL, 2, &Task2Handle, 1000, 300, 10000, 300);
+	                       NULL, 2, &Task2Handle, 1000, 300, 5000, 300);
 
 	vMSTSporadicTaskCreate(MSTTask3, "3",
 	                       configMINIMAL_STACK_SIZE,
