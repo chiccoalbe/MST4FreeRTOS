@@ -97,7 +97,7 @@ TaskHandle_t Task3Handle;
 TaskHandle_t Task4Handle;
 
 void MSTTask1(void *pvParameters) {
-	vMSTSporadicTaskRun(&Task3Handle);
+	//vMSTSporadicTaskRun(&Task3Handle);
 	if (xSemaphoreTake(xBinarySemUART2, portMAX_DELAY) == pdTRUE) {
 		length = snprintf((char*) transmit, sizeof(transmit), "Task1\n");
 		HAL_Delay(300);
@@ -106,6 +106,7 @@ void MSTTask1(void *pvParameters) {
 }
 
 void MSTTask2(void *pvParameters) {
+	vMSTSporadicTaskRun(&Task3Handle);
 	vMSTSporadicTaskRun(&Task4Handle);
 	if (xSemaphoreTake(xBinarySemUART2, portMAX_DELAY) == pdTRUE) {
 		length = snprintf((char*) transmit, sizeof(transmit), "Task2\n");
@@ -114,6 +115,7 @@ void MSTTask2(void *pvParameters) {
 }
 
 void MSTTask3(void *pvParameters) {
+	HAL_Delay(100);
 	if (xSemaphoreTake(xBinarySemUART2, portMAX_DELAY) == pdTRUE) {
 		length = snprintf((char*) transmit, sizeof(transmit), "SPORADIC1\n");
 		HAL_UART_Transmit_DMA(&huart2, transmit, length);
@@ -121,6 +123,7 @@ void MSTTask3(void *pvParameters) {
 }
 
 void MSTTask4(void *pvParameters) {
+	HAL_Delay(100);
 	if (xSemaphoreTake(xBinarySemUART2, portMAX_DELAY) == pdTRUE) {
 		length = snprintf((char*) transmit, sizeof(transmit), "SPORADIC2\n");
 		HAL_UART_Transmit_DMA(&huart2, transmit, length);
@@ -173,7 +176,7 @@ int main(void) {
 
 	xBinarySemUART2 = xSemaphoreCreateBinary();
 	xSemaphoreGive(xBinarySemUART2);
-
+/*
 	vMSTPeriodicTaskCreate(MSTTask1,                  // Function to execute
 	                       "1",                       // Task name
 	                       configMINIMAL_STACK_SIZE,  // Stack size
@@ -185,7 +188,7 @@ int main(void) {
 	                       500,                       //phase
 	                       300                        //WCET
 	                      );
-
+*/
 	vMSTPeriodicTaskCreate(MSTTask2, "2",
 	                       configMINIMAL_STACK_SIZE,
 	                       NULL, 2, &Task2Handle, 1000, 300, 10000, 300);
@@ -193,11 +196,11 @@ int main(void) {
 	vMSTSporadicTaskCreate(MSTTask3, "3",
 	                       configMINIMAL_STACK_SIZE,
 	                       NULL, 1, &Task3Handle, 1,
-	                       200, 300);
+	                       400, 150);
 	vMSTSporadicTaskCreate(MSTTask4, "4",
 		                   configMINIMAL_STACK_SIZE,
 		                   NULL, 1, &Task4Handle, 1,
-		                   300, 300);
+		                   400, 150);
 
 	vMSTSchedulerStart();
 

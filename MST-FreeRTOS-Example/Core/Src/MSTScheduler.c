@@ -439,10 +439,11 @@ BaseType_t vMSTSporadicTaskCreate(TaskFunction_t pvJobCode, const char *pcName,
 		*xNewExtTCB = (extTCB_t ) { .pvJobCode = pvJobCode, .pcName = pcName,
 						.pvParameters = pvParameters, .uxPriority = uxPriority,
 						.pxCreatedTask = pxCreatedTask, .xTaskDeadline =
-								xTaskDeadline, .uNumOfMissedDeadlines = 0,
-						.xTaskInterarrivalTime = xTaskInterarrivalTime,
-						.xJobCalled = pdFALSE, .xInterarrivalTimerRunning =
-						pdFALSE };
+								xTaskDeadline, .taskType = taskTypeSporadic,
+						.uNumOfMissedDeadlines = 0, .xTaskInterarrivalTime =
+								xTaskInterarrivalTime, .xJobCalled = pdFALSE,
+						.xInterarrivalTimerRunning =
+						pdFALSE, .xTaskWCET =  xTaskWCET};
 		prvXMaxInterrarrivalTime =
 				(xTaskInterarrivalTime > prvXMaxInterrarrivalTime) ?
 						xTaskInterarrivalTime : prvXMaxInterrarrivalTime;
@@ -674,9 +675,33 @@ static void prvComputeSporadicServerProprierties(TickType_t *tSS_Period,
 #endif
 
 #if (mst_USE_SPORADIC_SERVER == 1 && mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS)
-static BaseType_t prvAsmissionControlSporadicServer(extTCB_t forTCB) {
-
+/*
+ * In the MST version of the sporadic server, only one sporadic job runs at a time.
+ * To calculate acceptance we simply need to evaluate the slack:
+ * σ(t)=⌊(d_s1​−t)/p_s​⌋e_s​−e_s1​
+ * Where:
+ * - d_s1: Absolute deadline of the sporadic job
+ * - p_s: Period of the sporadic server
+ * - e_s: Execution budget of the sporadic server (deadline)
+ * - e_s1: Execution time requested by the sporadic job S_1
+ *
+ * The slack of the job is the difference between the guaranteed available
+ * processor time and the job’s execution requirement.
+ *
+ * It shall be higher or equal than 0
+ */
+static BaseType_t prvAsmissionControlSporadicServer(extTCB_t *forTCB,
+		extTCB_t *withSSTCB, TickType_t atArrivalTime) {
+	BaseType_t xSlack;
+	float guaranteedExecTime =
+	    ((float) (forTCB->xTaskDeadline) / (float) withSSTCB->xTaskPeriod)
+	    * (float) withSSTCB->xTaskWCET;
+	xSlack = guaranteedExecTime - forTCB->xTaskWCET;
+	if (xSlack >= 0)
+		return pdPASS;
+	return pdFAIL;
 }
+
 #endif
 
 /*
@@ -708,6 +733,30 @@ static BaseType_t prvAsmissionControlSporadicServer(extTCB_t forTCB) {
 #if (mst_USE_SPORADIC_SERVER == 1 && mst_schedSCHEDULING_POLICY == mst_schedSCHEDULING_RMS)
 
 volatile BaseType_t SporadicServerBudget = 0;
+
+volatile BaseType_t isSSJobSuspended = pdFALSE;
+
+static void prvMSTBudgetWatchdogCallback(TimerHandle_t xTimer) {
+	/*
+	 This is a naive timer, not actually correct as it does not
+	 consider that tasks can be preempted while running
+	 */
+	extTCB_t *xTCB = (extTCB_t*) pvTimerGetTimerID(xTimer);
+
+	taskENTER_CRITICAL();
+	SporadicServerBudget = 0;  // budget fully consumed
+
+	// Suspend the job if still running
+	if (xTCB->xJobCalled) {
+		vTaskSuspend(*(xTCB->pxCreatedTask));
+		isSSJobSuspended = pdTRUE;
+
+		// Notify the server task that budget was exhausted
+		xTaskNotify(SporadicServerHandle, NOTIFY_SS_BUDGET_FINISHED, eSetBits);
+		taskEXIT_CRITICAL();
+	}
+}
+
 static void prvMSTGenericReplenishmentTimerCallback(TimerHandle_t xTimer) {
 	/*
 	 Notify a sporadic task but make sure it knows it was the timer to notify, by passing a parameter
@@ -718,6 +767,18 @@ static void prvMSTGenericReplenishmentTimerCallback(TimerHandle_t xTimer) {
 	xTaskNotify(SporadicServerHandle, NOTIFY_SS_BUDGET_REPLENISHED, eSetBits);
 	taskEXIT_CRITICAL();
 }
+
+static prvRemoveSSItemFromList(extTCB_t *forTCB) {
+	taskENTER_CRITICAL();
+	if (listIS_CONTAINED_WITHIN(&xTasksList, &(forTCB->pxTaskTCBListItem))) {
+		uxListRemove(&(forTCB->pxTaskTCBListItem));
+		xListTasksNumber--;
+	} else {
+		configASSERT(pdFALSE);
+	}
+	taskEXIT_CRITICAL();
+}
+
 volatile BaseType_t isNextTaskAvailable = pdFALSE;
 
 static void prvMSTSporadicServerJob(void *pvParameters) {
@@ -728,33 +789,66 @@ static void prvMSTSporadicServerJob(void *pvParameters) {
 	configASSERT(xCurrExtTCB != NULL);
 	SporadicServerBudget = xCurrExtTCB->xTaskWCET;
 
-	TimerHandle_t xReplenishmentTimer = xTimerCreate(
-	    "ReplenishmentTimer",
-	    pdMS_TO_TICKS(100), // Temporary period
-	    pdFALSE,
-	    NULL,               // Temporary placeholder
-	    prvMSTGenericReplenishmentTimerCallback
-	);
+	TimerHandle_t xReplenishmentTimer = xTimerCreate("ReplenishmentTimer",
+			pdMS_TO_TICKS(100), // Temporary period
+			pdFALSE,
+			NULL,               // Temporary placeholder
+			prvMSTGenericReplenishmentTimerCallback);
+
+	TimerHandle_t xBudgetWatchdogTimer = xTimerCreate("BudgetWatchdog",
+			pdMS_TO_TICKS(SporadicServerBudget), // period = current budget
+			pdFALSE,
+			NULL, prvMSTBudgetWatchdogCallback);
+
+	extTCB_t *xCurrentRunningSporadicTCB = NULL;
 	for (;;) {
-		do {
-			uint32_t ulNotifyVal = 0;
+		uint32_t ulNotifyVal = 0;
+		while (SporadicServerBudget <= 0 || listLIST_IS_EMPTY(&xTasksList)) {
 			xTaskNotifyWait(0,
 			NOTIFY_SS_NEW_JOB_AVAILABLE | NOTIFY_SS_BUDGET_REPLENISHED,
 					&ulNotifyVal, portMAX_DELAY);
 			/*
 			 * Act on new job or replenishment. Otherwise sleep
 			 */
-		} while (SporadicServerBudget <= 0 || listLIST_IS_EMPTY(&xTasksList));
-		ListItem_t *xItm = listGET_HEAD_ENTRY(&xTasksList);
-		extTCB_t *xTCB = (extTCB_t*) xItm->pvOwner;
-		if (xTCB->xJobCalled) {
+		}
+		if (xCurrentRunningSporadicTCB != NULL
+				&& xCurrentRunningSporadicTCB->xJobCalled
+				&& isSSJobSuspended == pdFALSE) {
 			//task is running
+			continue;
 		} else {
 			/*run the task by notifying a SS request
-			 This should put xJobCalled = pdTRUE
+			 This will put xJobCalled = pdTRUE
 			 */
-			//task is running
-			xTaskNotify(*(xTCB->pxCreatedTask), NOTIFY_SS_REQUEST, eSetBits);
+			ListItem_t *xItm = listGET_HEAD_ENTRY(&xTasksList);
+			extTCB_t *xTCB = (extTCB_t*) xItm->pvOwner;
+			xCurrentRunningSporadicTCB = xTCB;
+
+
+			if (prvAsmissionControlSporadicServer(
+					xCurrentRunningSporadicTCB, xCurrExtTCB, xTaskGetTickCount()) == pdFAIL) {
+				prvRemoveSSItemFromList(xCurrentRunningSporadicTCB);
+			}
+			//notify a run request
+			xTaskNotify(*(xCurrentRunningSporadicTCB->pxCreatedTask),
+					NOTIFY_SS_REQUEST, eSetBits);
+			//start budget watchdog
+			vTimerSetTimerID(xBudgetWatchdogTimer,
+					(void*) xCurrentRunningSporadicTCB);
+			if (SporadicServerBudget > 0) {
+				if (isSSJobSuspended == pdTRUE) {
+					taskENTER_CRITICAL();
+					isSSJobSuspended = pdFALSE;
+					taskEXIT_CRITICAL();
+					vTaskResume(*(xCurrentRunningSporadicTCB->pxCreatedTask));
+				}
+				BaseType_t xResult = xTimerChangePeriod(xBudgetWatchdogTimer,
+						SporadicServerBudget, 0);
+				configASSERT(xResult == pdPASS);
+				configASSERT(xBudgetWatchdogTimer != NULL);
+				xTimerStart(xBudgetWatchdogTimer, 0);
+			}
+
 			uint32_t notificationGiver;
 			if (xTaskNotifyWait(0,
 			NOTIFY_SS_REQUEST_DONE | NOTIFY_SS_BUDGET_FINISHED,
@@ -766,6 +860,7 @@ static void prvMSTSporadicServerJob(void *pvParameters) {
 					 form preempted tasks by the FreeRTOS kernel are not considered
 					 */
 					taskENTER_CRITICAL();
+					xTimerStop(xBudgetWatchdogTimer, 0);
 					SporadicServerBudget = SporadicServerBudget
 							- xTCB->xPrevExecTime;
 					if (SporadicServerBudget < 0) {
@@ -779,21 +874,20 @@ static void prvMSTSporadicServerJob(void *pvParameters) {
 					/*
 					 Now remove the job and start the replenishment timer
 					 */
-					if (listIS_CONTAINED_WITHIN(&xTasksList,
-							&(xTCB->pxTaskTCBListItem))) {
-						uxListRemove(&(xTCB->pxTaskTCBListItem));
-						xListTasksNumber--;
-					} else {
-						configASSERT(pdFALSE);
-					}
-					if (xTCB->xPrevExecTime > 0) {
+					prvRemoveSSItemFromList(xCurrentRunningSporadicTCB);
+					if (xCurrentRunningSporadicTCB->xPrevExecTime > 0) {
 
-						TickType_t xNewPeriod = pdMS_TO_TICKS(
-								xCurrExtTCB->xTaskPeriod + xTCB->xPrevExecTime);
-						BaseType_t xResult = xTimerChangePeriod( xReplenishmentTimer, xNewPeriod, 0);
-						vTimerSetTimerID(xReplenishmentTimer, (void *) xTCB->xPrevExecTime);
+						TickType_t xNewPeriod =
+								pdMS_TO_TICKS(
+										xCurrExtTCB->xTaskPeriod
+												+ xCurrentRunningSporadicTCB->xPrevExecTime);
+						BaseType_t xResult = xTimerChangePeriod(
+								xReplenishmentTimer, xNewPeriod, 0);
+						vTimerSetTimerID(xReplenishmentTimer,
+								(void*) xCurrentRunningSporadicTCB->xPrevExecTime);
 						configASSERT(xResult == pdPASS);
-						configASSERT(xTimerStart(xReplenishmentTimer, 0) == pdPASS);
+						configASSERT(
+								xTimerStart(xReplenishmentTimer, 0) == pdPASS);
 					}
 
 					taskEXIT_CRITICAL();
