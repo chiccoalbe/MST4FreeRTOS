@@ -14,8 +14,8 @@
 ../Core/Src/MSTScheduler.c:693:19:prvAsmissionControlSporadicServer	32	static
 ../Core/Src/MSTScheduler.c:739:13:prvMSTBudgetWatchdogCallback	24	static
 ../Core/Src/MSTScheduler.c:760:13:prvMSTGenericReplenishmentTimerCallback	24	static
-../Core/Src/MSTScheduler.c:771:8:prvRemoveSSItemFromList	24	static,ignoring_inline_asm
+../Core/Src/MSTScheduler.c:771:13:prvRemoveSSItemFromList	24	static,ignoring_inline_asm
 ../Core/Src/MSTScheduler.c:784:13:prvMSTSporadicServerJob	96	static,ignoring_inline_asm
 ../Core/Src/MSTScheduler.c:911:19:prvComputeOrderedPriorities	80	dynamic,ignoring_inline_asm
 ../Core/Src/MSTScheduler.c:981:6:vMSTSchedulerStart	48	static,ignoring_inline_asm
-../Core/Src/MSTScheduler.c:1123:13:prvMSTDispatch	40	static,ignoring_inline_asm
+../Core/Src/MSTScheduler.c:1126:13:prvMSTDispatch	40	static,ignoring_inline_asm

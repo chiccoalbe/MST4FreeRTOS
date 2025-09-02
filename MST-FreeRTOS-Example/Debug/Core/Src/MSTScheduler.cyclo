@@ -14,8 +14,8 @@
 ../Core/Src/MSTScheduler.c:693:19:prvAsmissionControlSporadicServer	2
 ../Core/Src/MSTScheduler.c:739:13:prvMSTBudgetWatchdogCallback	2
 ../Core/Src/MSTScheduler.c:760:13:prvMSTGenericReplenishmentTimerCallback	1
-../Core/Src/MSTScheduler.c:771:8:prvRemoveSSItemFromList	2
+../Core/Src/MSTScheduler.c:771:13:prvRemoveSSItemFromList	2
 ../Core/Src/MSTScheduler.c:784:13:prvMSTSporadicServerJob	18
 ../Core/Src/MSTScheduler.c:911:19:prvComputeOrderedPriorities	8
 ../Core/Src/MSTScheduler.c:981:6:vMSTSchedulerStart	2
-../Core/Src/MSTScheduler.c:1123:13:prvMSTDispatch	5
+../Core/Src/MSTScheduler.c:1126:13:prvMSTDispatch	5

@@ -1,7 +1,9 @@
-# MSTScheduler
-> ⚠️ **Warning:** THIS IS A VERY EARLY ALPHA. IT IS NOT SUGGESTED TO USE IT IN PRODUCTION CODE
+# MST4FreeRTOS
+### v 0.1
+---
+> ⚠️ **Warning:** THIS IS A VERY EARLY ALPHA. ALL FUNCTIONALITY IMPLEMENTED, BUT NOT TOROUGHLY TESTED. IT IS NOT SUGGESTED TO USE IT IN PRODUCTION CODE
 
-**MSTScheduler** is a FreeRTOS extension that implements the **Standard Model (MST)** for real-time task scheduling.  
+**MST4FreeRTOS** is a FreeRTOS extension that implements the **Standard Model (MST)** for real-time task scheduling.  
 It adds support for **periodic tasks**, **sporadic tasks**, and optionally a **sporadic server**, using either **Rate Monotonic Scheduling (RMS)** or **Earliest Deadline First (EDF)**.
 
 The library provides a higher-level API to declare task timing parameters such as **period**, **deadline**, **phase**, and **WCET**, while still leveraging the FreeRTOS kernel underneath.
@@ -96,7 +98,7 @@ You can find an example for STM32 in the project
 repository
 
 ### 4. Start the scheduler
-> ⚠️ **Warning:** Make sure to call `vMSTSchedulerStart()` instead of `vTaskStartScheduler()`.
+> ⚠️  Make sure to call `vMSTSchedulerStart()` instead of `vTaskStartScheduler()`.
 ```c
 vMSTSchedulerStart();   // Use this instead of vTaskStartScheduler()
 ```
@@ -235,14 +237,16 @@ $$
 $$
 
 Where:
-- $ d_{s1} $: absolute deadline of the sporadic job  
-- $ p_s $: sporadic server period  
-- $ e_s $: sporadic server execution budget (WCET)  
-- $ e_{s1} $: requested execution time of sporadic job $ S_1 $
+- $ d_{s1} $ : absolute deadline of the sporadic job  
+- $ p_s $ : sporadic server period  
+- $ e_s $ : sporadic server execution budget (WCET)  
+- $ e_{s1} $ : requested execution time of sporadic job $ S_1 $
 
 Condition:  
 $$
+
 \sigma(t) \geq 0
+
 $$
 
 If slack is non-negative, the sporadic job is **accepted**; otherwise, it is **rejected**.

@@ -768,7 +768,7 @@ static void prvMSTGenericReplenishmentTimerCallback(TimerHandle_t xTimer) {
 	taskEXIT_CRITICAL();
 }
 
-static prvRemoveSSItemFromList(extTCB_t *forTCB) {
+static void prvRemoveSSItemFromList(extTCB_t *forTCB) {
 	taskENTER_CRITICAL();
 	if (listIS_CONTAINED_WITHIN(&xTasksList, &(forTCB->pxTaskTCBListItem))) {
 		uxListRemove(&(forTCB->pxTaskTCBListItem));
@@ -846,7 +846,7 @@ static void prvMSTSporadicServerJob(void *pvParameters) {
 						SporadicServerBudget, 0);
 				configASSERT(xResult == pdPASS);
 				configASSERT(xBudgetWatchdogTimer != NULL);
-				xTimerStart(xBudgetWatchdogTimer, 0);
+				//xTimerStart(xBudgetWatchdogTimer, 0);
 			}
 
 			uint32_t notificationGiver;
@@ -1005,6 +1005,9 @@ void vMSTSchedulerStart(void) {
 #endif
 	configASSERT(prvComputeOrderedPriorities());
 
+#else
+	//Not RMS
+	configASSERT(mst_USE_SPORADIC_SERVER == 0);
 #endif
 
 	vTaskStartScheduler();
