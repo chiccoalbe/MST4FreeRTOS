@@ -115,7 +115,7 @@ If a task runs over budget the watchdog that checks **AS SUCH THE SPORADIC SERVE
 
 ---
 
-## 📝 Notes
+## Notes
 - Deadlines and WCET are used for **admission control** and deadline-miss detection.
 - When using **RMS + sporadic server**, sporadic jobs are admitted according to slack and budget rules.
 - When using **EDF**, the scheduler dynamically recomputes priorities.
@@ -123,7 +123,7 @@ If a task runs over budget the watchdog that checks **AS SUCH THE SPORADIC SERVE
 
 ---
 
-## 📝 Future work
+## Future work
 - Use microseconds as timing standard
 
 ---
