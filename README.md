@@ -37,7 +37,7 @@ Edit [`MSTScheduler.h`](MSTLibrary/MSTScheduler.h) to configure:
 
 ---
 
-## 🚀 Usage
+## Usage
 
 ### 1. Include the header
 ```c
